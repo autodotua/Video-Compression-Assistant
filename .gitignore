@@ -1,3 +1,11 @@
+*.mp4
+
+*.flv
+
+test/
+
+*.exe
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
