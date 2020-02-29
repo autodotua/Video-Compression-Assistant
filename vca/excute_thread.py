@@ -4,6 +4,8 @@ import sys
 import time
 import subprocess
 from vca.print_redirect import PrintRedirect
+from vca.tools import *
+from vca.dicts import *
 from PyQt5.QtCore import *
 from subprocess import Popen, DEVNULL, STDOUT
 from datetime import datetime, timedelta
@@ -19,15 +21,14 @@ class ExcuteThread(QThread):
     r_ffmpeg_time = re.compile(
         r"([0-9]{2,}):([0-9][0-9]):([0-9][0-9])\.([0-9][0-9])")
     r_progress = re.compile(
-        r'frame= *([0-9]+) *fps= *([0-9\.]+) *q= *([0-9\.]+) *size= *([0-9\.a-zA-Z]+) *time= *([0-9\.:]+) *bitrate= *([0-9\.a-z/]+) *speed= *([0-9\.]+)x')
+        r'frame= *([0-9]+) *fps= *([0-9\.]+) *q= *([0-9\.]+) *size= *([0-9\.a-zA-Z]+) *time= *([0-9\.:]+) *bitrate= *([0-9\.a-z/]+).*speed= *([0-9\.]+)x')
     r_ssim = re.compile(r"SSIM (([YUVAll]+:[0-9\.\(\) ]+)+)")
     r_psnr = re.compile(r"PSNR (([yuvaverageminmax]+:[0-9\. ]+)+)")
     stopping = False
     ssim = False
 
-    def __init__(self, io_args=None, input_args=None, output_args=None, cmd=None):
+    def __init__(self, input_args=None, output_args=None, cmd=None):
         self.cmd = cmd
-        self.io_args = io_args
         self.input_args = input_args
         self.output_args = output_args
         super(ExcuteThread, self).__init__()
@@ -38,16 +39,29 @@ class ExcuteThread(QThread):
             if value:
                 cmd_list.append(str(value))
 
-    def generate_command(self, io):
+    def generate_command(self, input):
         cmd_list = ["ffmpeg -y -hide_banner"]
         if self.input_args:
-            self.generate_args_command(cmd_list, self.input_args)
+            self.generate_args_command(cmd_list, input["input_args"])
+
         cmd_list.append("-i")
-        cmd_list.append(io["input"])
+        cmd_list.append(input["input"])
+
         if self.output_args:
-            self.generate_args_command(cmd_list, self.output_args)
-        cmd_list.append(io["output"])
+            self.generate_args_command(
+                cmd_list, self.output_args["filter_args"])
+
+        if "c:a" not in input["input_args"] and self.has_audio(input["input"]) :
+            input["input_args"]["c:a"] = "copy"
+        if self.output_args["encoder"] is None:
+            output = get_unique_file_name(input["output"])
+        else:
+            ext = encoder_infos[self.output_args["encoder"]]["ext"]
+            output = get_unique_file_name(input["output"], ext)
+        print("output is "+output)
+        cmd_list.append(output)
         cmd = ' '.join(cmd_list)
+        print("cmd is "+cmd)
         return cmd
 
     def get_ffmpeg_seconds(self, time):
@@ -61,12 +75,12 @@ class ExcuteThread(QThread):
         seconds = hours*3600+minutes*60+seconds+mseconds/100.0
         return seconds
 
-    def match_progress(self, io,start_time,length, output):
+    def match_progress(self, input, start_time, length, output):
         match = self.r_progress.match(output)
         if match:
             now = datetime.now()
             progress = {
-                "file": io["input"],
+                "file": input["input"],
                 "frame": match.group(1),
                 "fps": match.group(2),
                 "q": match.group(3),
@@ -85,7 +99,7 @@ class ExcuteThread(QThread):
                     ((1-percent)/percent)
         else:
             progress = {"unkonwn": True}
-        
+
         self.progress_signal.emit(progress)
 
     def match_comparison(self, output):
@@ -100,9 +114,10 @@ class ExcuteThread(QThread):
         if match:
             self.ssim = match.group(1)
 
-    def excute_cmd(self, io, length):
+    def excute_cmd(self, input, length):
         start_time = datetime.now()
-        cmd = self.cmd if self.cmd is not None else self.generate_command(io)
+        cmd = self.cmd if self.cmd is not None else self.generate_command(
+            input)
         self.ff_process = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                            stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True,
                                            creationflags=subprocess.CREATE_NO_WINDOW)
@@ -111,39 +126,41 @@ class ExcuteThread(QThread):
             output = self.ff_process.stdout.readline()
             if len(output) == 0:
                 break
-            self.match_progress(io, start_time,length,output)
+            self.match_progress(input, start_time, length, output)
             self.match_comparison(output)
             self.print_signal.emit(output.strip())
+
+    def get_length(self, path):
+        info_process = subprocess.Popen("ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "+path,
+                                        stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                        creationflags=subprocess.CREATE_NO_WINDOW,
+                                        stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True)
+        output = info_process.communicate()[0].strip()
+        length = float(output)
+        return length
+
+    def has_audio(self, path):
+        info_process = subprocess.Popen("ffprobe.exe -show_streams -select_streams a -loglevel error "+path,
+                                        stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                        creationflags=subprocess.CREATE_NO_WINDOW,
+                                        stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True)
+        output = info_process.communicate()[0].strip()
+        print("has audio output is "+output +str(bool(output)))
+        return bool(output)
 
     def run(self):
         try:
             if self.cmd:
                 self.excute_cmd(None, -1)
             else:
-                for io in self.io_args:
+                for input in self.input_args:
                     if self.stopping:
                         return
-                    self.status_signal.emit(
-                        {"index": io["index"], "status": "处理中"})
-                    info_process = subprocess.Popen("ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "+io["input"],
-                                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                                    creationflags=subprocess.CREATE_NO_WINDOW,
-                                                    stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True)
-                    output = info_process.communicate()[0].strip()
-                    length = float(output)
-                    self.excute_cmd(io, length)
-
-                    self.status_signal.emit(
-                        {"index": io["index"], "status": "完成"})
-            # p=subprocess.Popen("ffmpeg -i input.mp4 output.flv", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    length = self.get_length(input["input"])
+                    self.excute_cmd(input, length)
         except Exception as ex:
 
             self.print_signal.emit(traceback.format_exc())
-        # self.stream_signal.emit(p)
-        # while True:
-        #     line = p.stderr.readline()
-        #     if(line):
-        #         self.print_signal.emit(line.decode("utf-8"))
 
     def stop(self):
         self.stopping = True

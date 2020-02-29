@@ -1,11 +1,12 @@
 
 encoder_infos = {
     "H.265": {"crf": {"max": 51, "default": 28},
-              "lib": "libx265","ext":"mp4"},
+              "lib": "libx265","ext":".mp4"},
     "H.264": {"crf": {"max": 51, "default": 23},
-              "lib": "libx264","ext":"mp4"},
+              "lib": "libx264","ext":".mp4"},
     "VP9": {"crf": {"max": 63, "default": 30},
-              "lib": "libvpx-vp9","ext":"webm"},
+              "lib": "libvpx-vp9","ext":".webm"},
+    "Srt": {"ext":".srt"},
 }
 
 presets = {

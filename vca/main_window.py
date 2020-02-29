@@ -3,6 +3,7 @@ from vca.excute_thread import ExcuteThread
 from vca.print_redirect import PrintRedirect
 from vca.dicts import *
 from vca.tools import *
+from vca.file_model import FileModel
 import sys
 import os
 import platform
@@ -21,6 +22,7 @@ import subprocess
 
 class Application(Ui_MainWindow):
     converting = False
+    files = FileModel()
 
     def __init__(self):
         QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
@@ -30,9 +32,8 @@ class Application(Ui_MainWindow):
         app = QApplication(sys.argv)
         self.MainWindow = QMainWindow()
         self.setupUi(self.MainWindow)
+        self.setup_init_values()
         self.setup_events()
-        self.setup_values()
-        self.setup_items()
         if platform.system() == "Windows":
             app.setFont(QFont("Microsoft Yahei UI", 9))
         self.MainWindow.show()
@@ -42,34 +43,34 @@ class Application(Ui_MainWindow):
         self.MainWindow.setWindowIcon(icon)
         sys.exit(app.exec_())
 
-    def setup_items(self):
-        self.cbb_encoder.setCurrentIndex(1)
-        self.cbb_encoder.setCurrentIndex(0)
+    def setup_init_values(self):
         self.update_progress(None)
+        self.lst.setModel(self.files)
+        self.lbl_preset.setText(presets[self.sld_preset.value()]["desc"])
 
     def get_input_args(self):
-        args = {}
-        if self.grpb_cut.isChecked():
-            time_from = self.time_start.time()
-            time_to = self.time_to.time()
-            second1 = time_from.hour()*3600+time_from.minute()*60+time_from.second()
-            second2 = time_to.hour()*3600+time_to.minute()*60+time_to.second()
-            span = second2-second1
-            if second1 > 0:
-                args["ss"] = second1
-            args["t"] = span
+        args = self.files.files.copy()
+        for arg in args:
+            arg["input_args"]={}
+            if arg["cut"]:
+                span = arg["cut_to"]-arg["cut_from"]
+                if arg["cut_from"] > 0:
+                     arg["input_args"]["ss"] = arg["cut_from"]
+                arg["input_args"]["t"] = span
         return args
 
     def get_output_args(self):
         args = {}
         if not self.grpb_video.isChecked():
             args["c:v"] = "copy"
+            encoder=None
         else:
-            args["c:v"] = encoder_infos[self.cbb_encoder.currentText()]["lib"]
+            encoder=self.cbb_encoder.currentText()
+            args["c:v"] = encoder_infos[encoder]["lib"]
             args["preset"] = presets[self.sld_preset.value()]["code"]
             if self.chk_crf.isEnabled() and self.chk_crf.isChecked():
                 args["crf"] = self.sld_crf.value()
-                if self.encoder == "VP9":
+                if encoder == "VP9":
                     args["b:v"] = "0"
             if self.chk_size.isChecked():
                 args["s"] = self.txt_size.text()
@@ -77,7 +78,7 @@ class Application(Ui_MainWindow):
                 args["b:v"] = str(self.txt_bitrate.value())+"M"
             if self.chk_bitrate_max.isChecked():
                 args["maxrate"] = str(self.txt_bitrate_max.value())+"M"
-                args["bufsize"]= str(self.txt_bitrate_max.value()*2)+"M"
+                args["bufsize"] = str(self.txt_bitrate_max.value()*2)+"M"
             if self.chk_bitrate_min.isChecked():
                 args["minrate"] = str(self.txt_bitrate_min.value())+"M"
             if self.chk_fps.isChecked():
@@ -85,28 +86,18 @@ class Application(Ui_MainWindow):
                 print("output args is "+str(args))
 
         if not self.grpb_audio.isChecked():
-            args["c:a"] = "copy"
+            pass
+            #args["c:a"] = "copy"
         else:
             args["b:a"] = self.cbb_bitrate_a.currentText()+"k"
-        return args
 
-    def get_io_args(self, ext):
-        args = []
-        for row in range(0, self.table_input.rowCount()):
-            output = self.table_input.item(row, 1).text(
-            )+"."+ext
-            output = get_unique_file_name(output)
-            args.append({"index": row,
-                         "input": self.table_input.item(row, 0).text(),
-                         "output": output
-                         })
 
-        return args
+        return {"filter_args":args,"encoder":encoder}
 
     def starting(self):
         self.converting = True
         self.btn_start.setText("停止")
-        self.table_input.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        # self.table_input.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
     def finished(self):
         self.converting = False
@@ -114,13 +105,14 @@ class Application(Ui_MainWindow):
         self.btn_start.setEnabled(True)
         self.btn_start.setText("开始")
         self.update_progress(None)
-        self.table_input.resizeColumnsToContents()
-        self.table_input.setEditTriggers(
-            QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed)
+        # self.table_input.resizeColumnsToContents()
+        # self.table_input.setEditTriggers(
+        #     QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed)
 
     def status_changed(self, i):
-        self.table_input.setItem(i["index"], 2, QTableWidgetItem(i["status"]))
-        self.table_input.resizeColumnsToContents()
+        # self.table_input.setItem(i["index"], 2, QTableWidgetItem(i["status"]))
+        # self.table_input.resizeColumnsToContents()
+        pass
 
     def format_delta(self, time):
         seconds = int(time.total_seconds())
@@ -155,7 +147,6 @@ class Application(Ui_MainWindow):
             self.lbl_current_time.setText(
                 "已用"+self.format_delta(progress["elapsed"]) + "  剩余"+self.format_delta(progress["left"]))
 
-
     def show_comparision_result(self, args):
         QMessageBox.information(
             None, "比较结果", "结构程度：\n"+args["ssim"].replace(" (", "（").replace(
@@ -166,24 +157,22 @@ class Application(Ui_MainWindow):
             self.btn_start.setEnabled(False)
             self.thread.stop()
         else:
-            if self.table_input.rowCount() == 0:
+            if False:
                 QMessageBox.critical(None, "错误", "还没有选择任何文件", QMessageBox.Ok)
                 return
             self.starting()
             if self.rbtn_convert.isChecked():
-                self.thread = ExcuteThread(self.get_io_args(encoder_infos[self.cbb_encoder.currentText()]["ext"]),
-                                           self.get_input_args(), self.get_output_args())
+                self.thread = ExcuteThread(self.get_input_args(), self.get_output_args())
             elif self.rbtn_compare.isChecked():
-                if self.table_input.rowCount() != 2:
+                if False:
                     QMessageBox.critical(
                         None, "错误", "输入文件必须为2个", QMessageBox.Ok)
                     return
-                cmd = 'ffmpeg -i {} -i {} -lavfi "ssim;[0:v][1:v]psnr" -f null -' .format(
-                    self.table_input.item(0, 0).text(), self.table_input.item(1, 0).text())
+                # cmd = 'ffmpeg -i {} -i {} -lavfi "ssim;[0:v][1:v]psnr" -f null -' .format(
+                #     self.table_input.item(0, 0).text(), self.table_input.item(1, 0).text())
                 self.thread = ExcuteThread(cmd=cmd)
             elif self.rbtn_sub.isCheckable():
-                self.thread = ExcuteThread(self.get_io_args("srt"),
-                                           self.get_input_args(), {})
+                self.thread = ExcuteThread(self.get_input_args(), {"encoder":"Srt","filter_args":{}})
             self.thread.print_signal.connect(lambda p:  self.txt_log.append(p))
             self.thread.progress_signal.connect(self.update_progress)
             self.thread.comparison_signal.connect(self.show_comparision_result)
@@ -198,7 +187,6 @@ class Application(Ui_MainWindow):
     #     self.txt_bitrate.setEnabled(index == 1)
 
     def encoder_changed(self, value):
-        self.encoder = value
         self.sld_crf.setMaximum(encoder_infos[value]["crf"]["max"])
         self.sld_crf.setValue(encoder_infos[value]["crf"]["default"])
 
@@ -206,35 +194,55 @@ class Application(Ui_MainWindow):
         paths = QFileDialog.getOpenFileNames(
             self.MainWindow, "打开",  filter="所有文件 (*.*)")
         if paths[0]:
-            index = self.table_input.rowCount()
-            self.table_input.setRowCount(index+len(paths[0]))
             for path in paths[0]:
-                row = self.table_input.rowCount()
-                name, ext = os.path.splitext(path)
-                self.table_input.setItem(index, 0, QTableWidgetItem(path))
-                self.table_input.setItem(
-                    index, 1, QTableWidgetItem(name))
-                index += 1
-
-        self.table_input.resizeColumnsToContents()
+                self.files.addFile(FileModel.file_args_list_to_dict([path,path,False,0,0]))
 
     def delete_selection(self):
-        rows = self.table_input.selectionModel().selectedRows()
-        for row in rows:
-            self.table_input.removeRow(row.row())
-            pass
+        index = self.lst.selectionModel().selection().indexes()[0]
+        self.files.removeFile(index.row())
+
+    def selected_file_changed(self, index):
+        if index is None or len(index.indexes())==0:
+            self.gpb_file.setEnabled(False)
+        else:
+            self.gpb_file.setEnabled(True)
+            index = index.indexes()[0]
+            self.txt_input.setText( self.files.data(index, FileModel.InputRole))
+            self.txt_output.setText( self.files.data(index, FileModel.OutputRole))
+            cut = self.files.data(index, FileModel.CutRole)
+            self.chk_cut.setChecked(cut)
+            if cut:
+                time_from = self.files.data(index, FileModel.CutFromRole)
+                time_to = self.files.data(index, FileModel.CutToRole)
+                self.time_from.setTime(seconds_to_qtime(time_from))
+                self.time_to.setTime(seconds_to_qtime(time_to))
+
+    def cut_changed(self, checked):
+        self.time_from.setEnabled(checked)
+        self.time_to.setEnabled(checked)
+
+    def save_io_settings(self):
+        index = self.lst.selectionModel().selection().indexes()[0]
+        file = {"input": self.txt_input.text(),
+                "output": self.txt_output.text(),
+                "cut": self.chk_cut.isChecked(),
+                "cut_from": qtime_to_seconds(self.time_from.time()),
+                "cut_to": qtime_to_seconds(self.time_to.time())}
+        self.files.editFile(index.row(), file)
+        pass
 
     def setup_events(self):
         self.btn_start.clicked.connect(self.start)
         self.cbb_encoder.currentTextChanged.connect(self.encoder_changed)
-        # self.cbb_encode_mode.currentIndexChanged.connect(
-        #     self.encode_mode_changed)
         self.sld_crf.valueChanged.connect(
             lambda value: self.lbl_crf.setText(str(value)))
         self.sld_preset.valueChanged.connect(
             lambda value: self.lbl_preset.setText(str(presets[value]["desc"])))
         self.btn_input.clicked.connect(self.btn_input_clicked)
         self.btn_delete.clicked.connect(self.delete_selection)
+        self.lst.selectionModel().selectionChanged.connect(self.selected_file_changed)
 
-    def setup_values(self):
-        self.lbl_preset.setText(presets[self.sld_preset.value()]["desc"])
+        self.chk_cut.toggled.connect(self.cut_changed)
+        self.btn_io_save.clicked.connect(self.save_io_settings)
+        self.btn_io_reset.clicked.connect(
+            lambda: self.selected_file_changed(self.lst.selectionModel().selection()))

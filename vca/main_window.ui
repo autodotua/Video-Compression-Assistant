@@ -26,18 +26,11 @@
       <property name="title">
        <string>输入/输出</string>
       </property>
-      <layout class="QGridLayout" name="gridLayout_6">
-       <item row="0" column="0">
-        <layout class="QGridLayout" name="gridLayout_3">
-         <property name="sizeConstraint">
-          <enum>QLayout::SetMinimumSize</enum>
-         </property>
-         <item row="1" column="1">
-          <widget class="QPushButton" name="btn_input">
-           <property name="text">
-            <string>添加..</string>
-           </property>
-          </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0" colspan="3">
+          <widget class="QListView" name="lst"/>
          </item>
          <item row="1" column="0">
           <spacer name="horizontalSpacer">
@@ -52,6 +45,13 @@
            </property>
           </spacer>
          </item>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="btn_input">
+           <property name="text">
+            <string>添加..</string>
+           </property>
+          </widget>
+         </item>
          <item row="1" column="2">
           <widget class="QPushButton" name="btn_delete">
            <property name="autoFillBackground">
@@ -62,32 +62,128 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="0" colspan="3">
-          <widget class="QTableWidget" name="table_input">
-           <property name="selectionMode">
-            <enum>QAbstractItemView::SingleSelection</enum>
-           </property>
-           <property name="selectionBehavior">
-            <enum>QAbstractItemView::SelectRows</enum>
-           </property>
-           <column>
-            <property name="text">
-             <string>输入</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>输入</string>
-            </property>
-           </column>
-           <column>
-            <property name="text">
-             <string>状态</string>
-            </property>
-           </column>
-          </widget>
-         </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="gpb_file">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="title">
+          <string>参数</string>
+         </property>
+         <layout class="QFormLayout" name="formLayout_2">
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_18">
+            <property name="text">
+             <string>输入：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="txt_input"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_19">
+            <property name="text">
+             <string>输出：</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="txt_output"/>
+          </item>
+          <item row="2" column="0">
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <item>
+             <widget class="QCheckBox" name="chk_cut">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_21">
+              <property name="text">
+               <string>裁剪：</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="2" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <item>
+             <widget class="QTimeEdit" name="time_from">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="currentSection">
+               <enum>QDateTimeEdit::HourSection</enum>
+              </property>
+              <property name="displayFormat">
+               <string>H:mm:ss</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_20">
+              <property name="text">
+               <string>—</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QTimeEdit" name="time_to">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="currentSection">
+               <enum>QDateTimeEdit::HourSection</enum>
+              </property>
+              <property name="displayFormat">
+               <string>H:mm:ss</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="3" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_io_reset">
+              <property name="text">
+               <string>重置</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="btn_io_save">
+              <property name="text">
+               <string>保存</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -113,64 +209,11 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>838</width>
+              <width>817</width>
               <height>305</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_7">
-             <item row="1" column="1">
-              <widget class="QGroupBox" name="grpb_cut">
-               <property name="title">
-                <string>裁剪</string>
-               </property>
-               <property name="checkable">
-                <bool>true</bool>
-               </property>
-               <property name="checked">
-                <bool>false</bool>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_10">
-                <item row="0" column="0">
-                 <layout class="QGridLayout" name="gridLayout_4">
-                  <item row="1" column="1">
-                   <widget class="QTimeEdit" name="time_to">
-                    <property name="currentSection">
-                     <enum>QDateTimeEdit::HourSection</enum>
-                    </property>
-                    <property name="displayFormat">
-                     <string>H:mm:ss</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QTimeEdit" name="time_start">
-                    <property name="currentSection">
-                     <enum>QDateTimeEdit::HourSection</enum>
-                    </property>
-                    <property name="displayFormat">
-                     <string>H:mm:ss</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QLabel" name="label_10">
-                    <property name="text">
-                     <string>结束时间：</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_9">
-                    <property name="text">
-                     <string>开始时间：</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
              <item row="0" column="1">
               <widget class="QGroupBox" name="grpb_audio">
                <property name="title">
@@ -301,6 +344,9 @@
                   </item>
                   <item row="0" column="2">
                    <widget class="QComboBox" name="cbb_encoder">
+                    <property name="currentIndex">
+                     <number>1</number>
+                    </property>
                     <item>
                      <property name="text">
                       <string>H.264</string>
@@ -434,6 +480,9 @@
                     <property name="pageStep">
                      <number>2</number>
                     </property>
+                    <property name="value">
+                     <number>28</number>
+                    </property>
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
                     </property>
@@ -481,7 +530,7 @@
                   <item row="1" column="3">
                    <widget class="QLabel" name="lbl_preset">
                     <property name="text">
-                     <string>TextLabel</string>
+                     <string>平衡</string>
                     </property>
                    </widget>
                   </item>
@@ -532,7 +581,7 @@
                   <item row="2" column="3">
                    <widget class="QLabel" name="lbl_crf">
                     <property name="text">
-                     <string>TextLabel</string>
+                     <string>28</string>
                     </property>
                    </widget>
                   </item>
