@@ -12,41 +12,48 @@ class FileModel(QAbstractListModel):
     CutToRole = Qt.UserRole + 5
     ImageSeqRole = Qt.UserRole +6
     ForceExtRole = Qt.UserRole +7
+    InputFpsRole=Qt.UserRole+8
 
     def file_args_list_to_dict(list):
         return {'input': list[0],'output': list[1],
             "cut": list[2], "cut_from": list[3], "cut_to": list[4],
-            "image_seq":list[5],"force_ext":list[6]}
+            "image_seq":list[5],"force_ext":list[6],"input_fps":list[7]}
 
     fileChanged = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.files =[FileModel.file_args_list_to_dict( [r'J:\临时\0123\DJI_0131%04d.bmp',
-             r'J:\临时\0123\DJI_0131.mp4',
-              False,  0,  0,True,False])]
+        self.files =[FileModel.file_args_list_to_dict( [r'C:\Users\autod\Desktop\sqt_test\DJI_0483%03d.jpg',
+             r'C:\Users\autod\Desktop\sqt_test\output.jpg',
+              False,  0,  0,True,False,0])]
 
     def data(self, index, role=Qt.DisplayRole):
         if isinstance(index , QModelIndex):
             row = index.row()
         else:
             row=index
-        if role == FileModel.InputRole:
-            return self.files[row]["input"]
-        elif role == FileModel.OutputRole:
-            return self.files[row]["output"]
-        elif role == Qt.DisplayRole:
+
+        if role == Qt.DisplayRole:
             return os.path.basename(self.files[row]["input"])
-        elif role == FileModel.CutRole:
-            return self.files[row]["cut"]
-        elif role == FileModel.CutFromRole:
-            return self.files[row]["cut_from"]
-        elif role == FileModel.CutToRole:
-            return self.files[row]["cut_to"]
-        elif role == FileModel.ImageSeqRole:
-            return self.files[row]["image_seq"]
-        elif role == FileModel.ForceExtRole:
-            return self.files[row]["force_ext"]
+        else:
+            if role in self.roleNames():
+                return self.files[row][self.roleNames()[role].decode("utf8")]
+        # if role == FileModel.InputRole:
+        #     return self.files[row]["input"]
+        # elif role == FileModel.OutputRole:
+        #     return self.files[row]["output"]
+        # elif role == Qt.DisplayRole:
+        #     return os.path.basename(self.files[row]["input"])
+        # elif role == FileModel.CutRole:
+        #     return self.files[row]["cut"]
+        # elif role == FileModel.CutFromRole:
+        #     return self.files[row]["cut_from"]
+        # elif role == FileModel.CutToRole:
+        #     return self.files[row]["cut_to"]
+        # elif role == FileModel.ImageSeqRole:
+        #     return self.files[row]["image_seq"]
+        # elif role == FileModel.ForceExtRole:
+        #     return self.files[row]["force_ext"]
 
     def rowCount(self, parent=QModelIndex()):
         return len(self.files)
@@ -59,7 +66,8 @@ class FileModel(QAbstractListModel):
             FileModel.CutToRole: b'cut_to',
             FileModel.CutFromRole: b'cut_from',
             FileModel.ImageSeqRole:b"image_seq",
-            FileModel.ForceExtRole:b"force_ext"
+            FileModel.ForceExtRole:b"force_ext",
+            FileModel.InputFpsRole:b"input_fps"
         }
 
     @pyqtSlot(str, int)
