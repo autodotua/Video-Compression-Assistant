@@ -130,14 +130,30 @@ class ExcuteThread(QThread):
             self.match_comparison(output)
             self.print_signal.emit(output.strip())
 
-    def get_length(self, path):
-        info_process = subprocess.Popen("ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "+path,
-                                        stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                        creationflags=subprocess.CREATE_NO_WINDOW,
-                                        stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True)
-        output = info_process.communicate()[0].strip()
-        length = float(output)
-        return length
+    def get_length(self,input):
+        try:
+            path=input["input"]
+            print("input is "+str(input))
+            if input["image_seq"]:
+                dir=os.path.dirname(path)
+                count=len([name for name in os.listdir(dir) if os.path.isfile(os.path.join(dir, name))])#文件夹内文件总数
+                print("count is "+str(count))
+                if "r" in self.output_args["filter_args"]:
+                    r=self.output_args["filter_args"]["r"]#帧率
+                else:
+                    r=25
+                return count/r
+            else:
+                info_process = subprocess.Popen("ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "+path,
+                                                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                                creationflags=subprocess.CREATE_NO_WINDOW,
+                                                stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True)
+                output = info_process.communicate()[0].strip()
+                length = float(output)
+                return length
+        except Exception as ex:
+            print("error to get length:"+str(ex))
+            return 0
 
     def has_audio(self, path):
         info_process = subprocess.Popen("ffprobe.exe -show_streams -select_streams a -loglevel error "+path,
@@ -156,7 +172,7 @@ class ExcuteThread(QThread):
                 for input in self.input_args:
                     if self.stopping:
                         return
-                    length = self.get_length(input["input"])
+                    length = self.get_length(input)
                     self.excute_cmd(input, length)
         except Exception as ex:
 

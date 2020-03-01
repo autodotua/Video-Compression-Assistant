@@ -10,23 +10,27 @@ class FileModel(QAbstractListModel):
     CutRole = Qt.UserRole + 3
     CutFromRole = Qt.UserRole + 4
     CutToRole = Qt.UserRole + 5
+    ImageSeqRole = Qt.UserRole +6
+    ForceExtRole = Qt.UserRole +7
 
     def file_args_list_to_dict(list):
         return {'input': list[0],'output': list[1],
-            "cut": list[2], "cut_from": list[3], "cut_to": list[4]}
+            "cut": list[2], "cut_from": list[3], "cut_to": list[4],
+            "image_seq":list[5],"force_ext":list[6]}
 
     fileChanged = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.files = [
-            {'input': r'C:\Users\autod\Desktop\待处理照片视频\DJI_0455.MP4',
-             'output': r'C:\Users\autod\Desktop\待处理照片视频\DJI_0455.MP4',
-             "cut": False, "cut_from": 0, "cut_to": 0}
-        ]
+        self.files =[FileModel.file_args_list_to_dict( [r'J:\临时\0123\DJI_0131%04d.bmp',
+             r'J:\临时\0123\DJI_0131.mp4',
+              False,  0,  0,True,False])]
 
     def data(self, index, role=Qt.DisplayRole):
-        row = index.row()
+        if isinstance(index , QModelIndex):
+            row = index.row()
+        else:
+            row=index
         if role == FileModel.InputRole:
             return self.files[row]["input"]
         elif role == FileModel.OutputRole:
@@ -39,6 +43,10 @@ class FileModel(QAbstractListModel):
             return self.files[row]["cut_from"]
         elif role == FileModel.CutToRole:
             return self.files[row]["cut_to"]
+        elif role == FileModel.ImageSeqRole:
+            return self.files[row]["image_seq"]
+        elif role == FileModel.ForceExtRole:
+            return self.files[row]["force_ext"]
 
     def rowCount(self, parent=QModelIndex()):
         return len(self.files)
@@ -49,7 +57,9 @@ class FileModel(QAbstractListModel):
             FileModel.OutputRole: b'output',
             FileModel.CutRole: b'cut',
             FileModel.CutToRole: b'cut_to',
-            FileModel.CutFromRole: b'cut_from'
+            FileModel.CutFromRole: b'cut_from',
+            FileModel.ImageSeqRole:b"image_seq",
+            FileModel.ForceExtRole:b"force_ext"
         }
 
     @pyqtSlot(str, int)

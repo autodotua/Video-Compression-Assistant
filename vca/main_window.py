@@ -51,7 +51,7 @@ class Application(Ui_MainWindow):
     def get_input_args(self):
         args = self.files.files.copy()
         for arg in args:
-            arg["input_args"]={}
+            arg["input_args"]={}#需要给ffmpeg的参数
             if arg["cut"]:
                 span = arg["cut_to"]-arg["cut_from"]
                 if arg["cut_from"] > 0:
@@ -142,10 +142,10 @@ class Application(Ui_MainWindow):
                 progress["fps"] + "FPS  "+progress["speed"]+"×")
             self.lbl_current_bitrate.setText(progress["bitrate"])
             self.prgb_current.setMaximum(100)
-            self.prgb_current.setValue(int(progress["percent"]*100))
-
-            self.lbl_current_time.setText(
-                "已用"+self.format_delta(progress["elapsed"]) + "  剩余"+self.format_delta(progress["left"]))
+            if "percent" in progress:
+                self.prgb_current.setValue(int(progress["percent"]*100))
+                self.lbl_current_time.setText(
+                    "已用"+self.format_delta(progress["elapsed"]) + "  剩余"+self.format_delta(progress["left"]))
 
     def show_comparision_result(self, args):
         QMessageBox.information(
@@ -164,12 +164,14 @@ class Application(Ui_MainWindow):
             if self.rbtn_convert.isChecked():
                 self.thread = ExcuteThread(self.get_input_args(), self.get_output_args())
             elif self.rbtn_compare.isChecked():
-                if False:
+                if self.files.rowCount()!=2:
                     QMessageBox.critical(
                         None, "错误", "输入文件必须为2个", QMessageBox.Ok)
                     return
-                # cmd = 'ffmpeg -i {} -i {} -lavfi "ssim;[0:v][1:v]psnr" -f null -' .format(
-                #     self.table_input.item(0, 0).text(), self.table_input.item(1, 0).text())
+                input1=self.files.data(0,FileModel.InputRole)
+                input2=self.files.data(1,FileModel.InputRole)
+                cmd = 'ffmpeg -i {} -i {} -lavfi "ssim;[0:v][1:v]psnr" -f null -' .format(
+                    input1, input2)
                 self.thread = ExcuteThread(cmd=cmd)
             elif self.rbtn_sub.isCheckable():
                 self.thread = ExcuteThread(self.get_input_args(), {"encoder":"Srt","filter_args":{}})
@@ -195,7 +197,7 @@ class Application(Ui_MainWindow):
             self.MainWindow, "打开",  filter="所有文件 (*.*)")
         if paths[0]:
             for path in paths[0]:
-                self.files.addFile(FileModel.file_args_list_to_dict([path,path,False,0,0]))
+                self.files.addFile(FileModel.file_args_list_to_dict([path,path,False,0,0,False,False]))
 
     def delete_selection(self):
         index = self.lst.selectionModel().selection().indexes()[0]
@@ -209,6 +211,8 @@ class Application(Ui_MainWindow):
             index = index.indexes()[0]
             self.txt_input.setText( self.files.data(index, FileModel.InputRole))
             self.txt_output.setText( self.files.data(index, FileModel.OutputRole))
+            self.chk_image_seq.setChecked(self.files.data(index,FileModel.ImageSeqRole))
+            self.chk_force_ext.setChecked(self.files.data(index,FileModel.ForceExtRole))
             cut = self.files.data(index, FileModel.CutRole)
             self.chk_cut.setChecked(cut)
             if cut:
@@ -225,6 +229,8 @@ class Application(Ui_MainWindow):
         index = self.lst.selectionModel().selection().indexes()[0]
         file = {"input": self.txt_input.text(),
                 "output": self.txt_output.text(),
+                "image_sec":self.chk_image_seq.isChecked(),
+                "force_ext":self.chk_force_ext.isChecked(),
                 "cut": self.chk_cut.isChecked(),
                 "cut_from": qtime_to_seconds(self.time_from.time()),
                 "cut_to": qtime_to_seconds(self.time_to.time())}
