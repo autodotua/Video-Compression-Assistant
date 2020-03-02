@@ -21,7 +21,7 @@ class ExcuteThread(QThread):
     r_ffmpeg_time = re.compile(
         r"([0-9]{2,}):([0-9][0-9]):([0-9][0-9])\.([0-9][0-9])")
     r_progress = re.compile(
-        r'frame= *([0-9]+) *fps= *([0-9\.]+) *q= *([0-9\.]+) *size= *([0-9\.a-zA-Z]+) *time= *([0-9\.:]+) *bitrate= *([0-9\.a-z/]+).*speed= *([0-9\.]+)x')
+        r'frame= *([0-9]+) *fps= *([0-9\.]+) *q= *([0-9\.\-]+) *size= *([0-9\.a-zA-Z]+) *time= *([0-9\.:]+) *bitrate= *([0-9\.a-z/]+).*speed= *([0-9\.]+)x')
     r_ssim = re.compile(r"SSIM (([YUVAll]+:[0-9\.\(\) ]+)+)")
     r_psnr = re.compile(r"PSNR (([yuvaverageminmax]+:[0-9\. ]+)+)")
     stopping = False
@@ -45,7 +45,7 @@ class ExcuteThread(QThread):
             self.generate_args_command(cmd_list, input.get_input_args())
 
         cmd_list.append("-i")
-        cmd_list.append(input.input)
+        cmd_list.append('"'+input.input+'"')
 
         if self.output_args:
             self.generate_args_command(
@@ -59,7 +59,7 @@ class ExcuteThread(QThread):
             ext = encoder_infos[self.output_args["encoder"]]["ext"]
             output = get_unique_file_name(input.output, ext)
         print("output is "+output)
-        cmd_list.append(output)
+        cmd_list.append('"'+output+'"')
         cmd = ' '.join(cmd_list)
         print("cmd is "+cmd)
         return cmd
@@ -77,6 +77,7 @@ class ExcuteThread(QThread):
 
     def match_progress(self, input, start_time, length, output):
         match = self.r_progress.match(output)
+        print(match)
         if match:
             now = datetime.now()
             progress = {
@@ -123,7 +124,12 @@ class ExcuteThread(QThread):
                                            creationflags=subprocess.CREATE_NO_WINDOW)
         l = 0
         while not self.ff_process.poll():
-            output = self.ff_process.stdout.readline()
+            try:
+
+                output = self.ff_process.stdout.readline()
+            except Exception as ex:
+                self.print_signal.emit("读取输出失败："+str(ex))
+                continue
             if len(output) == 0:
                 break
             self.match_progress(input, start_time, length, output)
@@ -132,19 +138,17 @@ class ExcuteThread(QThread):
 
     def get_length(self,input):
         try:
-            path=input["input"]
-            print("input is "+str(input))
-            if input["image_seq"]:
+            path=input.input
+            if input.image_seq:
                 dir=os.path.dirname(path)
                 count=len([name for name in os.listdir(dir) if os.path.isfile(os.path.join(dir, name))])#文件夹内文件总数
-                print("count is "+str(count))
                 if "r" in self.output_args["filter_args"]:
                     r=self.output_args["filter_args"]["r"]#帧率
                 else:
                     r=25
                 return count/r
             else:
-                info_process = subprocess.Popen("ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "+path,
+                info_process = subprocess.Popen('ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "'+path+'"',
                                                 stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                                 creationflags=subprocess.CREATE_NO_WINDOW,
                                                 stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True)
