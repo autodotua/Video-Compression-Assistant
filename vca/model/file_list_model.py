@@ -3,7 +3,7 @@ from PyQt5 import *
 import os
 
 
-class FileModel(QAbstractListModel):
+class FileListModel(QAbstractListModel):
 
     InputRole = Qt.UserRole + 1
     OutputRole = Qt.UserRole + 2
@@ -21,11 +21,13 @@ class FileModel(QAbstractListModel):
 
     fileChanged = pyqtSignal()
 
+    @property
+    def files(self):
+        return self._files
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.files =[FileModel.file_args_list_to_dict( [r'C:\Users\autod\Desktop\sqt_test\DJI_0483%03d.jpg',
-             r'C:\Users\autod\Desktop\sqt_test\output.jpg',
-              False,  0,  0,True,False,0])]
+        self._files =[]
 
     def data(self, index, role=Qt.DisplayRole):
         if isinstance(index , QModelIndex):
@@ -34,10 +36,11 @@ class FileModel(QAbstractListModel):
             row=index
 
         if role == Qt.DisplayRole:
-            return os.path.basename(self.files[row]["input"])
+            return os.path.basename(self._files[row].input)
         else:
-            if role in self.roleNames():
-                return self.files[row][self.roleNames()[role].decode("utf8")]
+            return None
+            # if role in self.roleNames():
+            #     return self.files[row][self.roleNames()[role].decode("utf8")]
         # if role == FileModel.InputRole:
         #     return self.files[row]["input"]
         # elif role == FileModel.OutputRole:
@@ -58,17 +61,17 @@ class FileModel(QAbstractListModel):
     def rowCount(self, parent=QModelIndex()):
         return len(self.files)
 
-    def roleNames(self):
-        return {
-            FileModel.InputRole: b'input',
-            FileModel.OutputRole: b'output',
-            FileModel.CutRole: b'cut',
-            FileModel.CutToRole: b'cut_to',
-            FileModel.CutFromRole: b'cut_from',
-            FileModel.ImageSeqRole:b"image_seq",
-            FileModel.ForceExtRole:b"force_ext",
-            FileModel.InputFpsRole:b"input_fps"
-        }
+    # def roleNames(self):
+    #     return {
+    #         FileListModel.InputRole: b'input',
+    #         FileListModel.OutputRole: b'output',
+    #         FileListModel.CutRole: b'cut',
+    #         FileListModel.CutToRole: b'cut_to',
+    #         FileListModel.CutFromRole: b'cut_from',
+    #         FileListModel.ImageSeqRole:b"image_seq",
+    #         FileListModel.ForceExtRole:b"force_ext",
+    #         FileListModel.InputFpsRole:b"input_fps"
+    #     }
 
     @pyqtSlot(str, int)
     def addFile(self, item):
@@ -84,6 +87,12 @@ class FileModel(QAbstractListModel):
 
     @pyqtSlot(int)
     def removeFile(self, row):
-        self.beginRemoveColumns(QModelIndex(), row, row)
+        self.beginRemoveRows(QModelIndex(), row, row)
         del self.files[row]
         self.endRemoveRows()
+
+    # def removeFiles(self, files):
+    #     self.beginResetModel()
+    #     for file in files:
+    #         self.files.remove(file)
+    #     self.endResetModel

@@ -3,7 +3,8 @@ from vca.excute_thread import ExcuteThread
 from vca.print_redirect import PrintRedirect
 from vca.dicts import *
 from vca.tools import *
-from vca.file_model import FileModel
+from vca.model.file_list_model import FileListModel
+from vca.model.file_model import FileModel
 import sys
 import os
 import platform
@@ -22,7 +23,7 @@ import subprocess
 
 class Application(Ui_MainWindow):
     converting = False
-    files = FileModel()
+    files = FileListModel()
 
     def __init__(self):
         QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
@@ -47,20 +48,6 @@ class Application(Ui_MainWindow):
         self.update_progress(None)
         self.lst.setModel(self.files)
         self.lbl_preset.setText(presets[self.sld_preset.value()]["desc"])
-
-    def get_input_args(self):
-        args = self.files.files.copy()
-        for arg in args:
-            arg["input_args"] = {}  # 需要给ffmpeg的参数
-            if arg["cut"]:
-                span = arg["cut_to"]-arg["cut_from"]
-                if arg["cut_from"] > 0:
-                    arg["input_args"]["ss"] = arg["cut_from"]
-                arg["input_args"]["t"] = span
-
-            if arg["input_fps"]>0:
-                arg["input_args"]["r"] = arg["input_fps"]
-        return args
 
     def get_output_args(self):
         args = {}
@@ -165,19 +152,19 @@ class Application(Ui_MainWindow):
             self.starting()
             if self.rbtn_convert.isChecked():
                 self.thread = ExcuteThread(
-                    self.get_input_args(), self.get_output_args())
+                    self.files.files, self.get_output_args())
             elif self.rbtn_compare.isChecked():
                 if self.files.rowCount() != 2:
                     QMessageBox.critical(
                         None, "错误", "输入文件必须为2个", QMessageBox.Ok)
                     return
-                input1 = self.files.data(0, FileModel.InputRole)
-                input2 = self.files.data(1, FileModel.InputRole)
+                input1 = self.files.files[0].input
+                input2 = self.files.files[1].input
                 cmd = 'ffmpeg -i {} -i {} -lavfi "ssim;[0:v][1:v]psnr" -f null -' .format(
                     input1, input2)
                 self.thread = ExcuteThread(cmd=cmd)
             elif self.rbtn_sub.isCheckable():
-                self.thread = ExcuteThread(self.get_input_args(), {
+                self.thread = ExcuteThread(self.files.files, {
                                            "encoder": "Srt", "filter_args": {}})
             self.thread.print_signal.connect(lambda p:  self.txt_log.append(p))
             self.thread.progress_signal.connect(self.update_progress)
@@ -201,37 +188,38 @@ class Application(Ui_MainWindow):
             self.MainWindow, "打开",  filter="所有文件 (*.*)")
         if paths[0]:
             for path in paths[0]:
-                self.files.addFile(FileModel.file_args_list_to_dict(
-                    [path, path, False, 0, 0, False, False,0]))
+                self.files.addFile(FileModel(path,path))
 
     def delete_selection(self):
-        index = self.lst.selectionModel().selection().indexes()[0]
-        self.files.removeFile(index.row())
+        indexex = self.lst.selectionModel().selection().indexes()
+        files=[]
+        for index in indexex:
+            files.append(self.files.files[index.row()])
+
+        for file in files:
+            index=self.files.files.index(file)
+            self.files.removeFile(index)
 
     def selected_file_changed(self, index):
-        if index is None or len(index.indexes()) == 0:
+        if index is None or len(index.indexes()) != 1:
             self.gpb_file.setEnabled(False)
         else:
             self.gpb_file.setEnabled(True)
-            index = index.indexes()[0]
-            self.txt_input.setText(self.files.data(index, FileModel.InputRole))
-            self.txt_output.setText(
-                self.files.data(index, FileModel.OutputRole))
-            self.chk_image_seq.setChecked(
-                self.files.data(index, FileModel.ImageSeqRole))
-            self.chk_force_ext.setChecked(
-                self.files.data(index, FileModel.ForceExtRole))
-            cut = self.files.data(index, FileModel.CutRole)
-            self.chk_cut.setChecked(cut)
-            if cut:
-                time_from = self.files.data(index, FileModel.CutFromRole)
-                time_to = self.files.data(index, FileModel.CutToRole)
+            row = index.indexes()[0].row()
+            self.txt_input.setText(self.files.files[row].input)
+            self.txt_output.setText(self.files.files[row].output)
+            self.chk_image_seq.setChecked(self.files.files[row].image_seq)
+            self.chk_force_ext.setChecked(self.files.files[row].force_ext)
+            self.chk_cut.setChecked(self.files.files[row].need_cut)
+            if self.files.files[row].need_cut:
+                time_from = self.files.files[row].cut[0]
+                time_to = self.files.files[row].cut[1]
                 self.time_from.setTime(seconds_to_qtime(time_from))
                 self.time_to.setTime(seconds_to_qtime(time_to))
-            input_fps = self.files.data(index, FileModel.InputFpsRole)
+            input_fps = self.files.files[row].input_fps
             self.chk_input_fps.setChecked(input_fps > 0)
             if input_fps > 0:
-                self.cbb_input_fps.setCurrentText(input_fps)
+                self.cbb_input_fps.setCurrentText(str(input_fps))
 
     def cut_changed(self, checked):
         self.time_from.setEnabled(checked)
@@ -239,14 +227,13 @@ class Application(Ui_MainWindow):
 
     def save_io_settings(self):
         index = self.lst.selectionModel().selection().indexes()[0]
-        file = {"input": self.txt_input.text(),
-                "output": self.txt_output.text(),
-                "image_sec": self.chk_image_seq.isChecked(),
-                "force_ext": self.chk_force_ext.isChecked(),
-                "cut": self.chk_cut.isChecked(),
-                "cut_from": qtime_to_seconds(self.time_from.time()),
-                "cut_to": qtime_to_seconds(self.time_to.time()),
-                "input_fps": self.cbb_input_fps.currentText() if self.chk_fps.isChecked() else 0}
+        file = FileModel(self.txt_input.text(),
+                         self.txt_output.text(),
+                         [qtime_to_seconds(self.time_from.time()), qtime_to_seconds(
+                             self.time_to.time())] if self.chk_cut.isChecked() else None,
+                         self.chk_image_seq.isChecked(),
+                         self.chk_force_ext.isChecked(),
+                         float(self.cbb_input_fps.currentText()) if self.chk_input_fps.isChecked() else 0)
         self.files.editFile(index.row(), file)
         pass
 

@@ -42,22 +42,22 @@ class ExcuteThread(QThread):
     def generate_command(self, input):
         cmd_list = ["ffmpeg -y -hide_banner"]
         if self.input_args:
-            self.generate_args_command(cmd_list, input["input_args"])
+            self.generate_args_command(cmd_list, input.get_input_args())
 
         cmd_list.append("-i")
-        cmd_list.append(input["input"])
+        cmd_list.append(input.input)
 
         if self.output_args:
             self.generate_args_command(
                 cmd_list, self.output_args["filter_args"])
 
-        if "c:a" not in input["input_args"] and self.has_audio(input["input"]) :
-            input["input_args"]["c:a"] = "copy"
+        if "c:a" not in self.output_args["filter_args"] and self.has_audio(input.input) :
+            self.output_args["filter_args"] ["c:a"] = "copy"
         if self.output_args["encoder"] is None:
-            output = get_unique_file_name(input["output"])
+            output = get_unique_file_name(input.output)
         else:
             ext = encoder_infos[self.output_args["encoder"]]["ext"]
-            output = get_unique_file_name(input["output"], ext)
+            output = get_unique_file_name(input.output, ext)
         print("output is "+output)
         cmd_list.append(output)
         cmd = ' '.join(cmd_list)
@@ -80,7 +80,7 @@ class ExcuteThread(QThread):
         if match:
             now = datetime.now()
             progress = {
-                "file": input["input"],
+                "file": input.input,
                 "frame": match.group(1),
                 "fps": match.group(2),
                 "q": match.group(3),

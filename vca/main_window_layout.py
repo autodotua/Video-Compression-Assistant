@@ -30,6 +30,7 @@ class Ui_MainWindow(object):
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
         self.lst = QtWidgets.QListView(self.groupBox_6)
+        self.lst.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.lst.setObjectName("lst")
         self.gridLayout.addWidget(self.lst, 0, 0, 1, 3)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
