@@ -1,0 +1,63 @@
+from vca.dicts import *
+class OutputModel:
+    def __init__(self):
+        self.video_filter = OutputModel.VideoFilterModel()
+        self.audio_filter = None
+
+    class VideoFilterModel:
+        def __init__(self):
+            self.encoder = "H.265"
+            self.preset = 5
+            self.crf = 28
+            self.size = None
+            self.fps = None
+            self.bitrate = None
+            self.max_bitrate = None
+            self.min_bitrate = None
+
+        def get_filter_args(self):
+            args = {}
+            args["c:v"] = encoder_infos[self.encoder]["lib"]
+            args["preset"] = presets[self.preset]["code"]
+            if self.crf is not None:
+                args["crf"] = self.crf
+                if self.encoder == "VP9" and self.crf==0:
+                    args["b:v"] = 0
+            if self.size is not None:
+                args["s"] = self.size
+            if self.bitrate is not None:
+                args["b:v"] = str(self.bitrate)+"M"
+            if self.max_bitrate  is not None:
+                args["maxrate"] = str(self.max_bitrate)+"M"
+                args["bufsize"] = str(self.max_bitrate*2)+"M"
+            if self.min_bitrate is not None:
+                args["minrate"] = str(self.min_bitrate)+"M"
+            if self.fps is not None:
+                args["r"] = self.fps
+            return args
+
+    class AudioFilterModel:
+        def __init__(self):
+            self.encoder = "ACC"
+            self.bitrate = 128
+
+        def get_filter_args(self):
+             args={}
+             args["b:a"] = self.bitrate+"k"
+             return args
+
+    def get_filter_args(self):
+        args={}
+        if self.video_filter:
+            args=self.video_filter.get_filter_args()
+            
+        else:
+            args["c:v"] = "copy"
+
+        if self.audio_filter:
+            args={**args,**self.audio_filter.get_filter_args()}
+        else:
+            args["c:a"] = "copy"
+
+        print("filter-args is "+str(args))
+        return args

@@ -5,6 +5,7 @@ from vca.dicts import *
 from vca.tools import *
 from vca.model.file_list_model import FileListModel
 from vca.model.file_model import FileModel
+from vca.model.output_model import OutputModel
 import sys
 import os
 import platform
@@ -50,38 +51,31 @@ class Application(Ui_MainWindow):
         self.lbl_preset.setText(presets[self.sld_preset.value()]["desc"])
 
     def get_output_args(self):
-        args = {}
+        model=OutputModel()
         if not self.grpb_video.isChecked():
-            args["c:v"] = "copy"
-            encoder = None
+            video_model=None
         else:
-            encoder = self.cbb_encoder.currentText()
-            args["c:v"] = encoder_infos[encoder]["lib"]
-            args["preset"] = presets[self.sld_preset.value()]["code"]
-            if self.chk_crf.isEnabled() and self.chk_crf.isChecked():
-                args["crf"] = self.sld_crf.value()
-                if encoder == "VP9":
-                    args["b:v"] = "0"
-            if self.chk_size.isChecked():
-                args["s"] = self.txt_size.text()
-            if self.chk_bitrate.isEnabled() and self.chk_bitrate.isChecked():
-                args["b:v"] = str(self.txt_bitrate.value())+"M"
-            if self.chk_bitrate_max.isChecked():
-                args["maxrate"] = str(self.txt_bitrate_max.value())+"M"
-                args["bufsize"] = str(self.txt_bitrate_max.value()*2)+"M"
-            if self.chk_bitrate_min.isChecked():
-                args["minrate"] = str(self.txt_bitrate_min.value())+"M"
-            if self.chk_fps.isChecked():
-                args["r"] = self.cbb_fps.currentText()
-                print("output args is "+str(args))
+            video_model=OutputModel.VideoFilterModel()
+            
+            video_model.encoder = self.cbb_encoder.currentText()
+            video_model.preset=self.sld_preset.value()
+            video_model.size=self.txt_size.text() if self.chk_size.isChecked() else None
+            video_model.size=self.txt_bitrate.value() if self.chk_bitrate.isChecked() else None
+            video_model.size=self.txt_bitrate_max.value() if self.chk_bitrate_max.isChecked() else None
+            video_model.size=self.txt_bitrate_min.value() if self.chk_bitrate_min.isChecked() else None
+            video_model.size=self.cbb_fps.currentText() if self.chk_fps.isChecked() else None
+            
 
         if not self.grpb_audio.isChecked():
-            pass
-            #args["c:a"] = "copy"
+            audio_model=None
         else:
-            args["b:a"] = self.cbb_bitrate_a.currentText()+"k"
+            audio_model=OutputModel.AudioFilterModel()
+            audio_model.bitrate= self.cbb_bitrate_a.currentText()
 
-        return {"filter_args": args, "encoder": encoder}
+        output=OutputModel()
+        output.video_filter=video_model
+        output.audio_filter=audio_model
+        return output
 
     def starting(self):
         self.converting = True
@@ -172,12 +166,6 @@ class Application(Ui_MainWindow):
             self.thread.finished.connect(self.finished)
             self.thread.status_signal.connect(self.status_changed)
             self.thread.start()
-
-    # def encode_mode_changed(self, index):
-    #     self.chk_crf.setEnabled(index == 0)
-    #     self.sld_crf.setEnabled(index == 0)
-    #     self.chk_bitrate.setEnabled(index == 1)
-    #     self.txt_bitrate.setEnabled(index == 1)
 
     def encoder_changed(self, value):
         self.sld_crf.setMaximum(encoder_infos[value]["crf"]["max"])

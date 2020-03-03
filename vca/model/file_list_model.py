@@ -1,5 +1,6 @@
 from PyQt5.QtCore import *
 from PyQt5 import *
+from vca.model.file_model import FileModel
 import os
 
 
@@ -27,7 +28,7 @@ class FileListModel(QAbstractListModel):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._files =[]
+        self._files =[FileModel(r"\\fz-laptop\Users\admin\Videos\2020-02-27 07-52-44.mp4",r'C:\Users\autod\Desktop\output.mp4')]
 
     def data(self, index, role=Qt.DisplayRole):
         if isinstance(index , QModelIndex):

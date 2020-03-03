@@ -49,19 +49,16 @@ class ExcuteThread(QThread):
 
         if self.output_args:
             self.generate_args_command(
-                cmd_list, self.output_args["filter_args"])
+                cmd_list, self.output_args.get_filter_args())
 
-        if "c:a" not in self.output_args["filter_args"] and self.has_audio(input.input) :
-            self.output_args["filter_args"] ["c:a"] = "copy"
-        if self.output_args["encoder"] is None:
+        if self.output_args.video_filter.encoder is None or input.force_ext:
             output = get_unique_file_name(input.output)
         else:
-            ext = encoder_infos[self.output_args["encoder"]]["ext"]
+            ext = encoder_infos[self.output_args.video_filter.encoder]["ext"]
             output = get_unique_file_name(input.output, ext)
-        print("output is "+output)
+            
         cmd_list.append('"'+output+'"')
         cmd = ' '.join(cmd_list)
-        print("cmd is "+cmd)
         return cmd
 
     def get_ffmpeg_seconds(self, time):
@@ -77,7 +74,7 @@ class ExcuteThread(QThread):
 
     def match_progress(self, input, start_time, length, output):
         match = self.r_progress.match(output)
-        print(match)
+        
         if match:
             now = datetime.now()
             progress = {
@@ -184,5 +181,6 @@ class ExcuteThread(QThread):
 
     def stop(self):
         self.stopping = True
-        self.ff_process.stdin.write("q")
-        self.ff_process.stdin.flush()
+        if self.ff_process:
+            self.ff_process.stdin.write("q")
+            self.ff_process.stdin.flush()
