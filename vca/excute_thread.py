@@ -56,7 +56,7 @@ class ExcuteThread(QThread):
         else:
             ext = encoder_infos[self.output_args.video_filter.encoder]["ext"]
             output = get_unique_file_name(input.output, ext)
-            
+
         cmd_list.append('"'+output+'"')
         cmd = ' '.join(cmd_list)
         return cmd
@@ -74,7 +74,7 @@ class ExcuteThread(QThread):
 
     def match_progress(self, input, start_time, length, output):
         match = self.r_progress.match(output)
-        
+
         if match:
             now = datetime.now()
             progress = {
@@ -133,23 +133,27 @@ class ExcuteThread(QThread):
             self.match_comparison(output)
             self.print_signal.emit(output.strip())
 
-    def get_length(self,input):
+    def get_length(self, input):
         try:
-            path=input.input
+            path = input.input
             if input.image_seq:
-                dir=os.path.dirname(path)
-                count=len([name for name in os.listdir(dir) if os.path.isfile(os.path.join(dir, name))])#文件夹内文件总数
+                dir = os.path.dirname(path)
+                count = len([name for name in os.listdir(dir) if os.path.isfile(
+                    os.path.join(dir, name))])  # 文件夹内文件总数
                 if "r" in self.output_args["filter_args"]:
-                    r=self.output_args["filter_args"]["r"]#帧率
+                    r = self.output_args["filter_args"]["r"]  # 帧率
                 else:
-                    r=25
+                    r = 25
                 return count/r
             else:
                 info_process = subprocess.Popen('ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "'+path+'"',
                                                 stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                                 creationflags=subprocess.CREATE_NO_WINDOW,
                                                 stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True)
-                output = info_process.communicate()[0].strip()
+                outputs = info_process.communicate()
+                if len(outputs) == 0:
+                    return 0
+                output = outputs[0].strip()
                 length = float(output)
                 return length
         except Exception as ex:
@@ -162,7 +166,7 @@ class ExcuteThread(QThread):
                                         creationflags=subprocess.CREATE_NO_WINDOW,
                                         stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True)
         output = info_process.communicate()[0].strip()
-        print("has audio output is "+output +str(bool(output)))
+        print("has audio output is "+output + str(bool(output)))
         return bool(output)
 
     def run(self):

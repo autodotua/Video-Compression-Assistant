@@ -40,8 +40,8 @@ class Application(Ui_MainWindow):
             app.setFont(QFont("Microsoft Yahei UI", 9))
         self.MainWindow.show()
         icon = QIcon()
-        # icon.addPixmap(QPixmap("niconvert/fz/icon.ico"),
-        # QIcon.Normal, QIcon.Off)
+        icon.addPixmap(QPixmap("icon.ico"),
+        QIcon.Normal, QIcon.Off)
         self.MainWindow.setWindowIcon(icon)
         sys.exit(app.exec_())
 
@@ -65,12 +65,15 @@ class Application(Ui_MainWindow):
             video_model.size=self.txt_bitrate_min.value() if self.chk_bitrate_min.isChecked() else None
             video_model.size=self.cbb_fps.currentText() if self.chk_fps.isChecked() else None
             
-
-        if not self.grpb_audio.isChecked():
-            audio_model=None
-        else:
-            audio_model=OutputModel.AudioFilterModel()
+        audio_model=OutputModel.AudioFilterModel()
+        mode_text=self.cbb_audio_mode.currentText
+        if mode_text=="复制":
+            audio_model.mode="copy"
+        elif mode_text=="编码":
+            audio_model.mode="encode"
             audio_model.bitrate= self.cbb_bitrate_a.currentText()
+        else:
+            audio_model.mode="none"
 
         output=OutputModel()
         output.video_filter=video_model

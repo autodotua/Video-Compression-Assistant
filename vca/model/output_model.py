@@ -2,7 +2,7 @@ from vca.dicts import *
 class OutputModel:
     def __init__(self):
         self.video_filter = OutputModel.VideoFilterModel()
-        self.audio_filter = None
+        self.audio_filter = OutputModel.AudioFilterModel()
 
     class VideoFilterModel:
         def __init__(self):
@@ -38,13 +38,17 @@ class OutputModel:
 
     class AudioFilterModel:
         def __init__(self):
+            self.mode="copy"#copy/encode/none
             self.encoder = "ACC"
             self.bitrate = 128
 
         def get_filter_args(self):
-             args={}
-             args["b:a"] = self.bitrate+"k"
-             return args
+            args={}
+            if self.mode=="copy":
+                args["c:a"] = "copy"
+            elif self.mode=="encode":
+                args["b:a"] = self.bitrate+"k"
+            return args
 
     def get_filter_args(self):
         args={}
@@ -56,8 +60,6 @@ class OutputModel:
 
         if self.audio_filter:
             args={**args,**self.audio_filter.get_filter_args()}
-        else:
-            args["c:a"] = "copy"
 
         print("filter-args is "+str(args))
         return args
