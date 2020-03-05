@@ -59,11 +59,12 @@ class Application(Ui_MainWindow):
             
             video_model.encoder = self.cbb_encoder.currentText()
             video_model.preset=self.sld_preset.value()
+            video_model.crf=self.sld_crf.value() if self.chk_crf.isChecked() else None
             video_model.size=self.txt_size.text() if self.chk_size.isChecked() else None
-            video_model.size=self.txt_bitrate.value() if self.chk_bitrate.isChecked() else None
-            video_model.size=self.txt_bitrate_max.value() if self.chk_bitrate_max.isChecked() else None
-            video_model.size=self.txt_bitrate_min.value() if self.chk_bitrate_min.isChecked() else None
-            video_model.size=self.cbb_fps.currentText() if self.chk_fps.isChecked() else None
+            video_model.bitrate=self.txt_bitrate.value() if self.chk_bitrate.isChecked() else None
+            video_model.bitrate_max=self.txt_bitrate_max.value() if self.chk_bitrate_max.isChecked() else None
+            video_model.bitrate_min=self.txt_bitrate_min.value() if self.chk_bitrate_min.isChecked() else None
+            video_model.fps=self.cbb_fps.currentText() if self.chk_fps.isChecked() else None
             
         audio_model=OutputModel.AudioFilterModel()
         mode_text=self.cbb_audio_mode.currentText

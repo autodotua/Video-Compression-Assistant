@@ -59,6 +59,8 @@ class ExcuteThread(QThread):
 
         cmd_list.append('"'+output+'"')
         cmd = ' '.join(cmd_list)
+        self.print_signal.emit("ffmpeg命令为："+cmd)
+        print("command is "+cmd)
         return cmd
 
     def get_ffmpeg_seconds(self, time):
@@ -157,6 +159,7 @@ class ExcuteThread(QThread):
                 length = float(output)
                 return length
         except Exception as ex:
+            self.print_signal.emit("获取视频长度失败"+str(ex))
             print("error to get length:"+str(ex))
             return 0
 

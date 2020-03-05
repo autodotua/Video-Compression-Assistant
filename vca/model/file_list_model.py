@@ -28,7 +28,7 @@ class FileListModel(QAbstractListModel):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._files =[FileModel(r"\\fz-laptop\Users\admin\Videos\2020-02-27 07-52-44.mp4",r'C:\Users\autod\Desktop\output.mp4')]
+        self._files =[FileModel(r"C:\Users\autod\Desktop\视频输出\DJI_0455.MP4",r'C:\Users\autod\Desktop\视频输出\DJI_0455.MP4')]
 
     def data(self, index, role=Qt.DisplayRole):
         if isinstance(index , QModelIndex):

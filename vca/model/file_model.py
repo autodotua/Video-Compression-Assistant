@@ -19,7 +19,8 @@ class FileModel:
             span = cut_to-cut_from
             if cut_from > 0:
                 args["ss"] = cut_from
-            args["t"] = span
+            if cut_to>0:
+                args["t"] = span
 
         if self.input_fps > 0:
             args["r"] = self.input_fps
