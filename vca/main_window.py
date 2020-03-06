@@ -1,5 +1,5 @@
 from vca.main_window_layout import Ui_MainWindow
-from vca.excute_thread import ExcuteThread
+from vca.excute_thread import *
 from vca.print_redirect import PrintRedirect
 from vca.dicts import *
 from vca.tools import *
@@ -62,9 +62,10 @@ class Application(Ui_MainWindow):
             video_model.crf=self.sld_crf.value() if self.chk_crf.isChecked() else None
             video_model.size=self.txt_size.text() if self.chk_size.isChecked() else None
             video_model.bitrate=self.txt_bitrate.value() if self.chk_bitrate.isChecked() else None
-            video_model.bitrate_max=self.txt_bitrate_max.value() if self.chk_bitrate_max.isChecked() else None
-            video_model.bitrate_min=self.txt_bitrate_min.value() if self.chk_bitrate_min.isChecked() else None
+            video_model.max_bitrate=self.txt_bitrate_max.value() if self.chk_bitrate_max.isChecked() else None
+            video_model.min_bitrate=self.txt_bitrate_min.value() if self.chk_bitrate_min.isChecked() else None
             video_model.fps=self.cbb_fps.currentText() if self.chk_fps.isChecked() else None
+            model.extra_args=self.txt_filter_extra_args.toPlainText()
             
         audio_model=OutputModel.AudioFilterModel()
         mode_text=self.cbb_audio_mode.currentText
@@ -76,10 +77,9 @@ class Application(Ui_MainWindow):
         else:
             audio_model.mode="none"
 
-        output=OutputModel()
-        output.video_filter=video_model
-        output.audio_filter=audio_model
-        return output
+        model.video_filter=video_model
+        model.audio_filter=audio_model
+        return model
 
     def starting(self):
         self.converting = True
@@ -108,31 +108,34 @@ class Application(Ui_MainWindow):
         hour = int(seconds/3600)
         return "{}:{:02}:{:02}".format(hour, minute, second)
 
-    def update_progress(self, progress):
-        if progress is None:
+    def update_progress(self, current):
+        if current is None:
             self.lbl_current_file.setText("")
             self.lbl_current_frame_time.setText("")
             self.lbl_current_speed.setText("")
             self.lbl_current_bitrate.setText("")
             self.lbl_current_time.setText("")
+            self.txt_current_cmd.setText("")
             self.prgb_current.setMaximum(100)
             self.prgb_current.reset()
-
-        elif progress["unkonwn"] == True:
-            self.prgb_current.setMaximum(0)
-
         else:
-            self.lbl_current_file.setText(progress["file"])
-            self.lbl_current_frame_time.setText(
-                "第"+progress["frame"] + "帧  "+progress["time"])
-            self.lbl_current_speed.setText(
-                progress["fps"] + "FPS  "+progress["speed"]+"×")
-            self.lbl_current_bitrate.setText(progress["bitrate"])
-            self.prgb_current.setMaximum(100)
-            if "percent" in progress:
-                self.prgb_current.setValue(int(progress["percent"]*100))
-                self.lbl_current_time.setText(
-                    "已用"+self.format_delta(progress["elapsed"]) + "  剩余"+self.format_delta(progress["left"]))
+            self.txt_current_cmd.setText(current.cmd)
+
+            if current.unkown == True:
+                self.prgb_current.setMaximum(0)
+
+            else:
+                self.lbl_current_file.setText(current.input.input)
+                self.lbl_current_frame_time.setText(
+                    "第"+current.frame + "帧  "+current.time)
+                self.lbl_current_speed.setText(
+                    current.fps + "FPS  "+current.speed+"×")
+                self.lbl_current_bitrate.setText(current.bitrate+"  q="+current.q)
+                self.prgb_current.setMaximum(100)
+                if current.percent:
+                    self.prgb_current.setValue(int(current.percent*100))
+                    self.lbl_current_time.setText(
+                        "已用"+self.format_delta(current.elapsed) + "  剩余"+self.format_delta(current.left))
 
     def show_comparision_result(self, args):
         QMessageBox.information(
@@ -196,20 +199,22 @@ class Application(Ui_MainWindow):
         if index is None or len(index.indexes()) != 1:
             self.gpb_file.setEnabled(False)
         else:
-            self.gpb_file.setEnabled(True)
             row = index.indexes()[0].row()
-            self.txt_input.setText(self.files.files[row].input)
-            self.txt_output.setText(self.files.files[row].output)
-            self.chk_image_seq.setChecked(self.files.files[row].image_seq)
-            self.chk_force_ext.setChecked(self.files.files[row].force_ext)
-            self.chk_cut.setChecked(self.files.files[row].need_cut)
-            if self.files.files[row].need_cut:
-                time_from = self.files.files[row].cut[0]
-                time_to = self.files.files[row].cut[1]
+            file=self.files.files[row]
+            self.gpb_file.setEnabled(True)
+            self.txt_input.setText(file.input)
+            self.txt_output.setText(file.output)
+            self.chk_image_seq.setChecked(file.image_seq)
+            self.chk_force_ext.setChecked(file.force_ext)
+            self.chk_cut.setChecked(file.need_cut)
+            if file.need_cut:
+                time_from = file.cut[0]
+                time_to = file.cut[1]
                 self.time_from.setTime(seconds_to_qtime(time_from))
                 self.time_to.setTime(seconds_to_qtime(time_to))
-            input_fps = self.files.files[row].input_fps
+            input_fps = file.input_fps
             self.chk_input_fps.setChecked(input_fps > 0)
+            self.txt_input_extra_args.setText(file.extra_args)
             if input_fps > 0:
                 self.cbb_input_fps.setCurrentText(str(input_fps))
 
@@ -225,7 +230,8 @@ class Application(Ui_MainWindow):
                              self.time_to.time())] if self.chk_cut.isChecked() else None,
                          self.chk_image_seq.isChecked(),
                          self.chk_force_ext.isChecked(),
-                         float(self.cbb_input_fps.currentText()) if self.chk_input_fps.isChecked() else 0)
+                         float(self.cbb_input_fps.currentText()) if self.chk_input_fps.isChecked() else 0,
+                         self.txt_input_extra_args.text())
         self.files.editFile(index.row(), file)
         pass
 

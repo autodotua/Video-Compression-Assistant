@@ -3,6 +3,7 @@ class OutputModel:
     def __init__(self):
         self.video_filter = OutputModel.VideoFilterModel()
         self.audio_filter = OutputModel.AudioFilterModel()
+        self.extra_args=""
 
     class VideoFilterModel:
         def __init__(self):
@@ -61,5 +62,6 @@ class OutputModel:
         if self.audio_filter:
             args={**args,**self.audio_filter.get_filter_args()}
 
-        print("filter-args is "+str(args))
+        if self.extra_args:
+            args[""]=self.extra_args
         return args
