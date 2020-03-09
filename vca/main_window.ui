@@ -1030,24 +1030,24 @@ p, li { white-space: pre-wrap; }
      <string>配置</string>
     </property>
     <addaction name="separator"/>
-    <addaction name="action_2"/>
-    <addaction name="action_3"/>
+    <addaction name="menu_import"/>
+    <addaction name="menu_export"/>
     <addaction name="separator"/>
-    <addaction name="action_5"/>
+    <addaction name="menu_config_autosave"/>
    </widget>
    <addaction name="menu"/>
   </widget>
-  <action name="action_2">
+  <action name="menu_import">
    <property name="text">
     <string>导入</string>
    </property>
   </action>
-  <action name="action_3">
+  <action name="menu_export">
    <property name="text">
     <string>导出</string>
    </property>
   </action>
-  <action name="action_5">
+  <action name="menu_config_autosave">
    <property name="checkable">
     <bool>true</bool>
    </property>

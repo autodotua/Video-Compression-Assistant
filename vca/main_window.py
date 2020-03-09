@@ -6,6 +6,7 @@ from vca.tools import *
 from vca.model.file_list_model import FileListModel
 from vca.model.file_model import FileModel
 from vca.model.output_model import OutputModel
+from vca.model.config import Config
 import sys
 import os
 import platform
@@ -23,41 +24,9 @@ import pickle
 import subprocess
 
 
-class DragableQListView(QListView):
-    dropped=pyqtSignal(list)
-    def __init__(self,parent=None):
-        super(DragableQListView,self).__init__(parent)
-        self.setDragEnabled(True)
-        self.setAcceptDrops(True)
-
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls:
-            event.accept()
-        else:
-            event.ignore()
-
-    def dragMoveEvent(self, event):
-        if event.mimeData().hasUrls:
-            event.setDropAction(Qt.CopyAction)
-            event.accept()
-        else:
-            event.ignore()
-
-    def dropEvent(self, event):
-        if event.mimeData().hasUrls:
-            event.setDropAction(Qt.CopyAction)
-            event.accept()
-            links = []
-            for url in event.mimeData().urls():
-                links.append(str(url.toLocalFile()))
-            self.dropped.emit(links)
-        else:
-            event.ignore()
-
-
 class Application(Ui_MainWindow):
     converting = False
-    files = FileListModel()
+    config = Config.restore()
 
     def __init__(self):
         QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
@@ -80,6 +49,7 @@ class Application(Ui_MainWindow):
 
     def setup_init_values(self):
         self.update_progress(None)
+        self.files = FileListModel(self.config.files) if self.config.autosave else FileListModel()
         self.lst.setModel(self.files)
         self.lbl_preset.setText(presets[self.sld_preset.value()]["desc"])
 
@@ -179,14 +149,19 @@ class Application(Ui_MainWindow):
             None, "比较结果", "结构程度：\n"+args["ssim"].replace(" (", "（").replace(
                 " ", "\n").replace("（", " (")+"\n\n信噪比：\n"+args["psnr"].replace(" ", "\n"))
 
+    def save_config(self):
+        self.config.files = self.files.files
+        Config.save(self.config)
+
     def start(self):
         if self.converting:
             self.btn_start.setEnabled(False)
             self.thread.stop()
         else:
-            if False:
+            if self.files.rowCount == 0:
                 QMessageBox.critical(None, "错误", "还没有选择任何文件", QMessageBox.Ok)
                 return
+            self.save_config()
             self.starting()
             if self.rbtn_convert.isChecked():
                 self.thread = ExcuteThread(
@@ -275,9 +250,19 @@ class Application(Ui_MainWindow):
 
     def chk_input_fps_toggled(self, checked):
         self.cbb_input_fps.setEnabled(checked)
-    def list_file_dropped(self,files):
+
+    def list_file_dropped(self, files):
         for file in files:
-            self.files.addFile(FileModel(file,file))
+            self.files.addFile(FileModel(file, file))
+
+    def import_config(self):
+        Config.restore()
+        pass
+
+    def export_config(self):
+        Config.save(Config())
+        pass
+
     def setup_events(self):
         self.btn_start.clicked.connect(self.start)
         self.cbb_encoder.currentTextChanged.connect(self.encoder_changed)
@@ -296,3 +281,5 @@ class Application(Ui_MainWindow):
             lambda: self.selected_file_changed(self.lst.selectionModel().selection()))
 
         self.lst.dropped.connect(self.list_file_dropped)
+        self.menu_import.triggered.connect(self.import_config)
+        self.menu_export.triggered.connect(self.export_config)
