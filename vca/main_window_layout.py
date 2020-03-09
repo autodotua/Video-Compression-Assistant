@@ -1,3 +1,4 @@
+import vca.dragable_QListView 
 # -*- coding: utf-8 -*-
 
 # Form implementation generated from reading ui file 'c:\Users\autod\OneDrive\同步\开发\视频压制助手\vca\main_window.ui'
@@ -8,7 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-import vca.main_window 
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -29,7 +30,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
-        self.lst = vca.main_window.DragableQListView(self.groupBox_6)
+        self.lst = vca.dragable_QListView.DragableQListView(self.groupBox_6)
         self.lst.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.lst.setObjectName("lst")
         self.gridLayout.addWidget(self.lst, 0, 0, 1, 3)
@@ -424,7 +425,23 @@ class Ui_MainWindow(object):
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1126, 26))
         self.menubar.setObjectName("menubar")
+        self.menu = QtWidgets.QMenu(self.menubar)
+        self.menu.setObjectName("menu")
         MainWindow.setMenuBar(self.menubar)
+        self.action_2 = QtWidgets.QAction(MainWindow)
+        self.action_2.setObjectName("action_2")
+        self.action_3 = QtWidgets.QAction(MainWindow)
+        self.action_3.setObjectName("action_3")
+        self.action_5 = QtWidgets.QAction(MainWindow)
+        self.action_5.setCheckable(True)
+        self.action_5.setChecked(True)
+        self.action_5.setObjectName("action_5")
+        self.menu.addSeparator()
+        self.menu.addAction(self.action_2)
+        self.menu.addAction(self.action_3)
+        self.menu.addSeparator()
+        self.menu.addAction(self.action_5)
+        self.menubar.addAction(self.menu.menuAction())
 
         self.retranslateUi(MainWindow)
         self.cbb_input_fps.setCurrentIndex(6)
@@ -534,3 +551,7 @@ class Ui_MainWindow(object):
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'SimSun\'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
+        self.menu.setTitle(_translate("MainWindow", "配置"))
+        self.action_2.setText(_translate("MainWindow", "导入"))
+        self.action_3.setText(_translate("MainWindow", "导出"))
+        self.action_5.setText(_translate("MainWindow", "自动保存"))
