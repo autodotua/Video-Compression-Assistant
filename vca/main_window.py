@@ -49,9 +49,67 @@ class Application(Ui_MainWindow):
 
     def setup_init_values(self):
         self.update_progress(None)
-        self.files = FileListModel(self.config.files) if self.config.autosave else FileListModel()
+        self.files = FileListModel(
+            self.config.files) if self.config.autosave else FileListModel()
         self.lst.setModel(self.files)
+        self.apply_output_ui()
         self.lbl_preset.setText(presets[self.sld_preset.value()]["desc"])
+
+    def apply_output_ui(self):
+        model = self.config.output_args
+        if model.video_filter is None:
+            self.grpb_video.setChecked(False)
+        else:
+            self.grpb_video.setChecked(True)
+            video = model.video_filter
+            self.cbb_encoder.setCurrentText(video.encoder)
+            self.sld_preset.setValue(video.preset)
+
+            if video.crf is None:
+                self.chk_crf.setChecked(False)
+            else:
+                self.chk_crf.setChecked(True)
+                self.sld_crf.setValue(video.crf)
+
+            if video.size is None:
+                self.chk_size.setChecked(False)
+            else:
+                self.chk_size.setChecked(True)
+                self.txt_size.setText(video.size)
+
+            if video.bitrate is None:
+                self.chk_bitrate.setChecked(False)
+            else:
+                self.chk_bitrate.setChecked(True)
+                self.txt_bitrate.setValue(video.bitrate)
+
+            if video.max_bitrate is None:
+                self.chk_bitrate_max.setChecked(False)
+            else:
+                self.chk_bitrate_max.setChecked(True)
+                self.txt_bitrate_max.setValue(video.max_bitrate)
+
+            if video.min_bitrate is None:
+                self.chk_bitrate_min.setChecked(False)
+            else:
+                self.chk_bitrate_min.setChecked(True)
+                self.txt_bitrate_min.setValue(video.min_bitrate)
+
+            if video.fps is None:
+                self.chk_fps.setChecked(False)
+            else:
+                self.chk_fps.setChecked(True)
+                self.cbb_fps.setCurrentText(video.fps)
+        
+        audio=model.audio_filter
+        if audio.mode=="copy":
+            self.cbb_audio_mode.setCurrentText("复制")
+        elif audio.mode=="encode":
+            self.cbb_audio_mode.setCurrentText("编码")
+        elif audio.mode=="none":
+            self.cbb_audio_mode.setCurrentText("不处理")
+        self.cbb_bitrate_a.setCurrentText(str(audio.bitrate))
+
 
     def get_output_args(self):
         model = OutputModel()
@@ -71,7 +129,6 @@ class Application(Ui_MainWindow):
             video_model.min_bitrate = self.txt_bitrate_min.value(
             ) if self.chk_bitrate_min.isChecked() else None
             video_model.fps = self.cbb_fps.currentText() if self.chk_fps.isChecked() else None
-            model.extra_args = self.txt_filter_extra_args.toPlainText()
 
         audio_model = OutputModel.AudioFilterModel()
         mode_text = self.cbb_audio_mode.currentText
@@ -79,9 +136,11 @@ class Application(Ui_MainWindow):
             audio_model.mode = "copy"
         elif mode_text == "编码":
             audio_model.mode = "encode"
-            audio_model.bitrate = self.cbb_bitrate_a.currentText()
+            audio_model.bitrate = float(self.cbb_bitrate_a.currentText())
         else:
             audio_model.mode = "none"
+
+        model.extra_args = self.txt_filter_extra_args.toPlainText()
 
         model.video_filter = video_model
         model.audio_filter = audio_model
@@ -149,19 +208,23 @@ class Application(Ui_MainWindow):
             None, "比较结果", "结构程度：\n"+args["ssim"].replace(" (", "（").replace(
                 " ", "\n").replace("（", " (")+"\n\n信噪比：\n"+args["psnr"].replace(" ", "\n"))
 
-    def save_config(self):
+    def save_config(self, path=None):
         self.config.files = self.files.files
-        Config.save(self.config)
+        self.config.output_args=self.get_output_args()
+        if path:
+            self.config.save(path)
+        else:
+            self.config.save()
 
     def start(self):
         if self.converting:
             self.btn_start.setEnabled(False)
             self.thread.stop()
         else:
-            if self.files.rowCount == 0:
+            self.save_config()
+            if self.files.rowCount() == 0:
                 QMessageBox.critical(None, "错误", "还没有选择任何文件", QMessageBox.Ok)
                 return
-            self.save_config()
             self.starting()
             if self.rbtn_convert.isChecked():
                 self.thread = ExcuteThread(
@@ -256,11 +319,18 @@ class Application(Ui_MainWindow):
             self.files.addFile(FileModel(file, file))
 
     def import_config(self):
-        Config.restore()
+        path = QFileDialog.getOpenFileName(
+            self.MainWindow, "保存",  filter="JSON文件 (*.json)")[0]
+        if path:
+            self.config = Config.restore(path)
+            self.setup_init_values()
         pass
 
     def export_config(self):
-        Config.save(Config())
+        path = QFileDialog.getSaveFileName(
+            self.MainWindow, "保存",  filter="JSON文件 (*.json)")[0]
+        if path:
+            self.save_config(path)
         pass
 
     def setup_events(self):

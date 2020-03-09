@@ -10,15 +10,14 @@ _config_file_path = "config.json"
 class Config:
     def __init__(self):
 
-        self.files = FileListModel()
-        self.outputArgs = OutputModel()
+        self.files = []
+        self.output_args = OutputModel()
         self.autosave = True
 
-    def restore():
-        global _config_file_path
-        if os.path.isfile(_config_file_path):
+    def restore(path=_config_file_path):
+        if os.path.isfile(path):
             try:
-                with open(_config_file_path, encoding="utf-8") as f:
+                with open(path, encoding="utf-8") as f:
                     json = f.read()
                     config = jsonpickle.decode(json)
                     return config
@@ -27,11 +26,10 @@ class Config:
         else:
             return Config()
 
-    def save(config):
-        global _config_file_path
+    def save(self,path=_config_file_path):
         try:
-            with open(_config_file_path, "w", encoding="utf-8") as f:
-                json = jsonpickle.encode(config)
+            with open(path, "w", encoding="utf-8") as f:
+                json = jsonpickle.encode(self)
                 f.write(json)
         except Exception as ex:
             pass
