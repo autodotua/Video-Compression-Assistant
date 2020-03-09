@@ -8,7 +8,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+import vca.main_window 
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -29,7 +29,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
-        self.lst = QtWidgets.QListView(self.groupBox_6)
+        self.lst = vca.main_window.DragableQListView(self.groupBox_6)
         self.lst.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.lst.setObjectName("lst")
         self.gridLayout.addWidget(self.lst, 0, 0, 1, 3)

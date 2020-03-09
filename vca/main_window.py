@@ -15,11 +15,44 @@ import asyncio
 from io import StringIO
 from pathlib import Path
 from datetime import timedelta
+import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import pickle
 import subprocess
+
+
+class DragableQListView(QListView):
+    dropped=pyqtSignal(list)
+    def __init__(self,parent=None):
+        super(DragableQListView,self).__init__(parent)
+        self.setDragEnabled(True)
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls:
+            event.accept()
+        else:
+            event.ignore()
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasUrls:
+            event.setDropAction(Qt.CopyAction)
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        if event.mimeData().hasUrls:
+            event.setDropAction(Qt.CopyAction)
+            event.accept()
+            links = []
+            for url in event.mimeData().urls():
+                links.append(str(url.toLocalFile()))
+            self.dropped.emit(links)
+        else:
+            event.ignore()
 
 
 class Application(Ui_MainWindow):
@@ -41,7 +74,7 @@ class Application(Ui_MainWindow):
         self.MainWindow.show()
         icon = QIcon()
         icon.addPixmap(QPixmap("icon.ico"),
-        QIcon.Normal, QIcon.Off)
+                       QIcon.Normal, QIcon.Off)
         self.MainWindow.setWindowIcon(icon)
         sys.exit(app.exec_())
 
@@ -51,34 +84,37 @@ class Application(Ui_MainWindow):
         self.lbl_preset.setText(presets[self.sld_preset.value()]["desc"])
 
     def get_output_args(self):
-        model=OutputModel()
+        model = OutputModel()
         if not self.grpb_video.isChecked():
-            video_model=None
+            video_model = None
         else:
-            video_model=OutputModel.VideoFilterModel()
-            
-            video_model.encoder = self.cbb_encoder.currentText()
-            video_model.preset=self.sld_preset.value()
-            video_model.crf=self.sld_crf.value() if self.chk_crf.isChecked() else None
-            video_model.size=self.txt_size.text() if self.chk_size.isChecked() else None
-            video_model.bitrate=self.txt_bitrate.value() if self.chk_bitrate.isChecked() else None
-            video_model.max_bitrate=self.txt_bitrate_max.value() if self.chk_bitrate_max.isChecked() else None
-            video_model.min_bitrate=self.txt_bitrate_min.value() if self.chk_bitrate_min.isChecked() else None
-            video_model.fps=self.cbb_fps.currentText() if self.chk_fps.isChecked() else None
-            model.extra_args=self.txt_filter_extra_args.toPlainText()
-            
-        audio_model=OutputModel.AudioFilterModel()
-        mode_text=self.cbb_audio_mode.currentText
-        if mode_text=="复制":
-            audio_model.mode="copy"
-        elif mode_text=="编码":
-            audio_model.mode="encode"
-            audio_model.bitrate= self.cbb_bitrate_a.currentText()
-        else:
-            audio_model.mode="none"
+            video_model = OutputModel.VideoFilterModel()
 
-        model.video_filter=video_model
-        model.audio_filter=audio_model
+            video_model.encoder = self.cbb_encoder.currentText()
+            video_model.preset = self.sld_preset.value()
+            video_model.crf = self.sld_crf.value() if self.chk_crf.isChecked() else None
+            video_model.size = self.txt_size.text() if self.chk_size.isChecked() else None
+            video_model.bitrate = self.txt_bitrate.value(
+            ) if self.chk_bitrate.isChecked() else None
+            video_model.max_bitrate = self.txt_bitrate_max.value(
+            ) if self.chk_bitrate_max.isChecked() else None
+            video_model.min_bitrate = self.txt_bitrate_min.value(
+            ) if self.chk_bitrate_min.isChecked() else None
+            video_model.fps = self.cbb_fps.currentText() if self.chk_fps.isChecked() else None
+            model.extra_args = self.txt_filter_extra_args.toPlainText()
+
+        audio_model = OutputModel.AudioFilterModel()
+        mode_text = self.cbb_audio_mode.currentText
+        if mode_text == "复制":
+            audio_model.mode = "copy"
+        elif mode_text == "编码":
+            audio_model.mode = "encode"
+            audio_model.bitrate = self.cbb_bitrate_a.currentText()
+        else:
+            audio_model.mode = "none"
+
+        model.video_filter = video_model
+        model.audio_filter = audio_model
         return model
 
     def starting(self):
@@ -130,7 +166,8 @@ class Application(Ui_MainWindow):
                     "第"+current.frame + "帧  "+current.time)
                 self.lbl_current_speed.setText(
                     current.fps + "FPS  "+current.speed+"×")
-                self.lbl_current_bitrate.setText(current.bitrate+"  q="+current.q)
+                self.lbl_current_bitrate.setText(
+                    current.bitrate+"  q="+current.q)
                 self.prgb_current.setMaximum(100)
                 if current.percent:
                     self.prgb_current.setValue(int(current.percent*100))
@@ -183,16 +220,16 @@ class Application(Ui_MainWindow):
             self.MainWindow, "打开",  filter="所有文件 (*.*)")
         if paths[0]:
             for path in paths[0]:
-                self.files.addFile(FileModel(path,path))
+                self.files.addFile(FileModel(path, path))
 
     def delete_selection(self):
         indexex = self.lst.selectionModel().selection().indexes()
-        files=[]
+        files = []
         for index in indexex:
             files.append(self.files.files[index.row()])
 
         for file in files:
-            index=self.files.files.index(file)
+            index = self.files.files.index(file)
             self.files.removeFile(index)
 
     def selected_file_changed(self, index):
@@ -200,7 +237,7 @@ class Application(Ui_MainWindow):
             self.gpb_file.setEnabled(False)
         else:
             row = index.indexes()[0].row()
-            file=self.files.files[row]
+            file = self.files.files[row]
             self.gpb_file.setEnabled(True)
             self.txt_input.setText(file.input)
             self.txt_output.setText(file.output)
@@ -230,14 +267,17 @@ class Application(Ui_MainWindow):
                              self.time_to.time())] if self.chk_cut.isChecked() else None,
                          self.chk_image_seq.isChecked(),
                          self.chk_force_ext.isChecked(),
-                         float(self.cbb_input_fps.currentText()) if self.chk_input_fps.isChecked() else 0,
+                         float(self.cbb_input_fps.currentText()
+                               ) if self.chk_input_fps.isChecked() else 0,
                          self.txt_input_extra_args.text())
         self.files.editFile(index.row(), file)
         pass
 
     def chk_input_fps_toggled(self, checked):
         self.cbb_input_fps.setEnabled(checked)
-
+    def list_file_dropped(self,files):
+        for file in files:
+            self.files.addFile(FileModel(file,file))
     def setup_events(self):
         self.btn_start.clicked.connect(self.start)
         self.cbb_encoder.currentTextChanged.connect(self.encoder_changed)
@@ -254,3 +294,5 @@ class Application(Ui_MainWindow):
         self.btn_io_save.clicked.connect(self.save_io_settings)
         self.btn_io_reset.clicked.connect(
             lambda: self.selected_file_changed(self.lst.selectionModel().selection()))
+
+        self.lst.dropped.connect(self.list_file_dropped)
