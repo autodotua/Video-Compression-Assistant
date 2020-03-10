@@ -22,6 +22,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import pickle
 import subprocess
+import psutil
 
 
 class Application(Ui_MainWindow):
@@ -54,6 +55,7 @@ class Application(Ui_MainWindow):
         self.lst.setModel(self.files)
         self.apply_output_ui()
         self.lbl_preset.setText(presets[self.sld_preset.value()]["desc"])
+        self.btn_pause.hide()
 
     def apply_output_ui(self):
         model = self.config.output_args
@@ -100,16 +102,15 @@ class Application(Ui_MainWindow):
             else:
                 self.chk_fps.setChecked(True)
                 self.cbb_fps.setCurrentText(video.fps)
-        
-        audio=model.audio_filter
-        if audio.mode=="copy":
+
+        audio = model.audio_filter
+        if audio.mode == "copy":
             self.cbb_audio_mode.setCurrentText("复制")
-        elif audio.mode=="encode":
+        elif audio.mode == "encode":
             self.cbb_audio_mode.setCurrentText("编码")
-        elif audio.mode=="none":
+        elif audio.mode == "none":
             self.cbb_audio_mode.setCurrentText("不处理")
         self.cbb_bitrate_a.setCurrentText(str(audio.bitrate))
-
 
     def get_output_args(self):
         model = OutputModel()
@@ -148,7 +149,9 @@ class Application(Ui_MainWindow):
 
     def starting(self):
         self.converting = True
+        self.pausing = False
         self.btn_start.setText("停止")
+        self.btn_pause.setText("暂停")
         # self.table_input.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
     def finished(self):
@@ -183,6 +186,7 @@ class Application(Ui_MainWindow):
             self.txt_current_cmd.setText("")
             self.prgb_current.setMaximum(100)
             self.prgb_current.reset()
+            self.btn_pause.hide()
         else:
             self.txt_current_cmd.setText(current.cmd)
 
@@ -210,22 +214,34 @@ class Application(Ui_MainWindow):
 
     def save_config(self, path=None):
         self.config.files = self.files.files
-        self.config.output_args=self.get_output_args()
+        self.config.output_args = self.get_output_args()
         if path:
             self.config.save(path)
         else:
             self.config.save()
 
+    def pause(self):
+        if not self.pausing:
+            self.thread.pause()
+            self.pausing=True
+            self.btn_pause.setText("继续")
+        else:
+            self.thread.resume()
+            self.pausing=False
+            self.btn_pause.setText("暂停")
+
     def start(self):
         if self.converting:
             self.btn_start.setEnabled(False)
             self.thread.stop()
+            self.btn_pause.hide()
         else:
             self.save_config()
             if self.files.rowCount() == 0:
                 QMessageBox.critical(None, "错误", "还没有选择任何文件", QMessageBox.Ok)
                 return
             self.starting()
+            self.btn_pause.show()
             if self.rbtn_convert.isChecked():
                 self.thread = ExcuteThread(
                     self.files.files, self.get_output_args())
@@ -335,6 +351,7 @@ class Application(Ui_MainWindow):
 
     def setup_events(self):
         self.btn_start.clicked.connect(self.start)
+        self.btn_pause.clicked.connect(self.pause)
         self.cbb_encoder.currentTextChanged.connect(self.encoder_changed)
         self.sld_crf.valueChanged.connect(
             lambda value: self.lbl_crf.setText(str(value)))

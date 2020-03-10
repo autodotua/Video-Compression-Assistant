@@ -10,6 +10,7 @@ from PyQt5.QtCore import *
 from subprocess import Popen, DEVNULL, STDOUT
 from datetime import datetime, timedelta
 import traceback
+import psutil
 
 
 class Current:
@@ -17,18 +18,18 @@ class Current:
         self.cmd = ""
         self.length = 0
         self.input = ""
-        self.start_time=None
-        self.frame=None
-        self.fps=None
-        self.q=None
-        self.size=None
-        self.time=None
-        self.bitrate=None
-        self.speed=None
-        self.elapsed=None
-        self.unkown=True
-        self.percent=None
-        self.left=None
+        self.start_time = None
+        self.frame = None
+        self.fps = None
+        self.q = None
+        self.size = None
+        self.time = None
+        self.bitrate = None
+        self.speed = None
+        self.elapsed = None
+        self.unkown = True
+        self.percent = None
+        self.left = None
 
 
 class ExcuteThread(QThread):
@@ -51,11 +52,13 @@ class ExcuteThread(QThread):
         self.input_args = input_args
         self.output_args = output_args
         self.current = Current()
+        self.stopping=False
+        self.pausing=False
         super(ExcuteThread, self).__init__()
 
     def generate_args_command(self, cmd_list, arg_dict):
         for key, value in arg_dict.items():
-            if key!="":
+            if key != "":
                 cmd_list.append("-"+key)
             if value:
                 cmd_list.append(str(value))
@@ -95,20 +98,20 @@ class ExcuteThread(QThread):
         seconds = hours*3600+minutes*60+seconds+mseconds/100.0
         return seconds
 
-    def match_progress(self,output):
+    def match_progress(self, output):
         match = self.r_progress.match(output)
 
         if match:
             now = datetime.now()
-            self.current.frame= match.group(1)
-            self.current.fps=match.group(2)
-            self.current.q= match.group(3)
-            self.current.size=match.group(4)
-            self.current.time=match.group(5)
-            self.current.bitrate=match.group(6)
-            self.current.speed=match.group(7)
-            self.current.elapsed=now-self.current.start_time
-            self.current.unkown=False
+            self.current.frame = match.group(1)
+            self.current.fps = match.group(2)
+            self.current.q = match.group(3)
+            self.current.size = match.group(4)
+            self.current.time = match.group(5)
+            self.current.bitrate = match.group(6)
+            self.current.speed = match.group(7)
+            self.current.elapsed = now-self.current.start_time
+            self.current.unkown = False
             if self.current.length > 0:
                 percent = self.get_ffmpeg_seconds(
                     match.group(5))/self.current.length
@@ -116,9 +119,9 @@ class ExcuteThread(QThread):
                 self.current.left = (now-self.current.start_time) * \
                     ((1-percent)/percent)
             else:
-                self.current.percent=None
+                self.current.percent = None
         else:
-            self.current.unkown=True
+            self.current.unkown = True
 
         self.progress_signal.emit(self.current)
 
@@ -136,14 +139,14 @@ class ExcuteThread(QThread):
 
     def excute_cmd(self):
         self.current.start_time = datetime.now()
-        self.ff_process=subprocess.Popen(self.current.cmd, stdin = subprocess.PIPE, stdout = subprocess.PIPE,
-                                           stderr = subprocess.STDOUT, encoding = "utf8", universal_newlines = True,
-                                           creationflags = subprocess.CREATE_NO_WINDOW)
-        l=0
+        self.ff_process = subprocess.Popen(self.current.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                           stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True,
+                                           creationflags=subprocess.CREATE_NO_WINDOW)
+        l = 0
         while not self.ff_process.poll():
             try:
 
-                output=self.ff_process.stdout.readline()
+                output = self.ff_process.stdout.readline()
             except Exception as ex:
                 self.print_signal.emit("读取输出失败："+str(ex))
                 continue
@@ -155,26 +158,26 @@ class ExcuteThread(QThread):
 
     def get_length(self, input):
         try:
-            path=input.input
+            path = input.input
             if input.image_seq:
-                dir=os.path.dirname(path)
-                count=len([name for name in os.listdir(dir) if os.path.isfile(
+                dir = os.path.dirname(path)
+                count = len([name for name in os.listdir(dir) if os.path.isfile(
                     os.path.join(dir, name))])  # 文件夹内文件总数
                 if "r" in self.output_args["filter_args"]:
-                    r=self.output_args["filter_args"]["r"]  # 帧率
+                    r = self.output_args["filter_args"]["r"]  # 帧率
                 else:
-                    r=25
+                    r = 25
                 return count/r
             else:
-                info_process=subprocess.Popen('ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "'+path+'"',
-                                                stdin = subprocess.PIPE, stdout = subprocess.PIPE,
-                                                creationflags = subprocess.CREATE_NO_WINDOW,
-                                                stderr = subprocess.STDOUT, encoding = "utf8", universal_newlines = True)
-                outputs=info_process.communicate()
+                info_process = subprocess.Popen('ffprobe.exe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "'+path+'"',
+                                                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                                creationflags=subprocess.CREATE_NO_WINDOW,
+                                                stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True)
+                outputs = info_process.communicate()
                 if len(outputs) == 0:
                     return 0
-                output=outputs[0].strip()
-                length=float(output)
+                output = outputs[0].strip()
+                length = float(output)
                 return length
         except Exception as ex:
             self.print_signal.emit("获取视频长度失败"+str(ex))
@@ -182,7 +185,7 @@ class ExcuteThread(QThread):
             return 0
 
     def has_audio(self, path):
-        info_process=subprocess.Popen("ffprobe.exe -show_streams -select_streams a -loglevel error "+path,
+        info_process = subprocess.Popen("ffprobe.exe -show_streams -select_streams a -loglevel error "+path,
                                         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                         creationflags=subprocess.CREATE_NO_WINDOW,
                                         stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True)
@@ -198,9 +201,10 @@ class ExcuteThread(QThread):
                 for input in self.input_args:
                     if self.stopping:
                         return
-                    self.current.input=input
+                    self.current.input = input
                     self.current.length = self.get_length(input)
-                    self.current.cmd=  self.cmd if self.cmd is not None else self.generate_command(input)
+                    self.current.cmd = self.cmd if self.cmd is not None else self.generate_command(
+                        input)
 
                     self.excute_cmd()
         except Exception as ex:
@@ -209,6 +213,16 @@ class ExcuteThread(QThread):
 
     def stop(self):
         self.stopping = True
+        if self.pausing:
+            self.resume()
         if self.ff_process:
             self.ff_process.stdin.write("q")
             self.ff_process.stdin.flush()
+
+    def pause(self):
+        self.pausing=True
+        psutil.Process(pid=self.ff_process.pid).suspend()
+
+    def resume(self):
+        self.pausing=False
+        psutil.Process(pid=self.ff_process.pid).resume()
