@@ -177,7 +177,10 @@ class ExcuteThread(QThread):
                 if len(outputs) == 0:
                     return 0
                 output = outputs[0].strip()
-                length = float(output)
+                if output=="N/A":
+                    length=0
+                else:
+                    length = float(output)
                 return length
         except Exception as ex:
             self.print_signal.emit("获取视频长度失败"+str(ex))

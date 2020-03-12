@@ -6,7 +6,7 @@ from vca.tools import *
 from vca.model.file_list_model import FileListModel
 from vca.model.file_model import FileModel
 from vca.model.output_model import OutputModel
-from vca.model.config import Config
+from vca.model.config import *
 import sys
 import os
 import platform
@@ -43,7 +43,7 @@ class Application(Ui_MainWindow):
             app.setFont(QFont("Microsoft Yahei UI", 9))
         self.MainWindow.show()
         icon = QIcon()
-        icon.addPixmap(QPixmap("icon.ico"),
+        icon.addPixmap(QPixmap("icon.ico" if app_dir is None else os.path.join(app_dir,"icon.ico")),
                        QIcon.Normal, QIcon.Off)
         self.MainWindow.setWindowIcon(icon)
         sys.exit(app.exec_())
@@ -65,7 +65,7 @@ class Application(Ui_MainWindow):
             self.grpb_video.setChecked(True)
             video = model.video_filter
             self.cbb_encoder.setCurrentText(video.encoder)
-            self.sld_preset.setValue(video.preset)
+            self.sld_preset.setValue(video.preset+5)
 
             if video.crf is None:
                 self.chk_crf.setChecked(False)

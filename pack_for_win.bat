@@ -1,1 +1,0 @@
-pyinstaller -F -i .\icon.ico .\main.pyw
