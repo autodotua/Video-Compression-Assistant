@@ -1,7 +1,11 @@
 pyinstaller main.py -F --icon ./icon.ico -w
 # pyinstaller main.spec
-xcopy ff*.exe dist /y
-xcopy icon.ico dist /y
+Copy-Item "ff*.exe" -Destination "dist"
+Copy-Item "icon.ico" -Destination "dist"
+Move-Item -Path "./dist/main.exe" -Destination "./dist/vca.exe" -Force
+#xcopy ff*.exe dist /y
+# xcopy icon.ico dist /y
+# xcopy ./dist/main.exe ./dist/vca.exe /y
 # $WshShell = New-Object -comObject WScript.Shell
 # $Shortcut = $WshShell.CreateShortcut(".\dist\vca.lnk")
 # $Shortcut.TargetPath ="vca\vca.exe"

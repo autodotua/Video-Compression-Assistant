@@ -138,7 +138,7 @@ class Application(Ui_MainWindow):
             audio_model.mode = "copy"
         elif mode_text == "重编码":
             audio_model.mode = "encode"
-            audio_model.bitrate = math.floor(self.cbb_bitrate_a.currentText())
+            audio_model.bitrate = math.floor(float(self.cbb_bitrate_a.currentText()))
         else:
             audio_model.mode = "none"
 

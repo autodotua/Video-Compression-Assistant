@@ -8,7 +8,7 @@ class OutputModel:
     class VideoFilterModel:
         def __init__(self):
             self.encoder = "H.265"
-            self.preset = 2
+            self.preset = 1
             self.crf = 28
             self.size = None
             self.fps = None
@@ -48,7 +48,7 @@ class OutputModel:
             if self.mode=="copy":
                 args["c:a"] = "copy"
             elif self.mode=="encode":
-                args["b:a"] = self.bitrate+"k"
+                args["b:a"] = str(self.bitrate)+"k"
             return args
 
     def get_filter_args(self):
