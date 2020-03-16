@@ -8,7 +8,7 @@ class OutputModel:
     class VideoFilterModel:
         def __init__(self):
             self.encoder = "H.265"
-            self.preset = 5
+            self.preset = 2
             self.crf = 28
             self.size = None
             self.fps = None

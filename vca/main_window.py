@@ -23,6 +23,7 @@ from PyQt5.QtCore import *
 import pickle
 import subprocess
 import psutil
+import math
 
 
 class Application(Ui_MainWindow):
@@ -65,7 +66,7 @@ class Application(Ui_MainWindow):
             self.grpb_video.setChecked(True)
             video = model.video_filter
             self.cbb_encoder.setCurrentText(video.encoder)
-            self.sld_preset.setValue(video.preset+5)
+            self.sld_preset.setValue(video.preset)
 
             if video.crf is None:
                 self.chk_crf.setChecked(False)
@@ -107,7 +108,7 @@ class Application(Ui_MainWindow):
         if audio.mode == "copy":
             self.cbb_audio_mode.setCurrentText("复制")
         elif audio.mode == "encode":
-            self.cbb_audio_mode.setCurrentText("编码")
+            self.cbb_audio_mode.setCurrentText("重编码")
         elif audio.mode == "none":
             self.cbb_audio_mode.setCurrentText("不处理")
         self.cbb_bitrate_a.setCurrentText(str(audio.bitrate))
@@ -132,12 +133,12 @@ class Application(Ui_MainWindow):
             video_model.fps = self.cbb_fps.currentText() if self.chk_fps.isChecked() else None
 
         audio_model = OutputModel.AudioFilterModel()
-        mode_text = self.cbb_audio_mode.currentText
+        mode_text = self.cbb_audio_mode.currentText()
         if mode_text == "复制":
             audio_model.mode = "copy"
-        elif mode_text == "编码":
+        elif mode_text == "重编码":
             audio_model.mode = "encode"
-            audio_model.bitrate = float(self.cbb_bitrate_a.currentText())
+            audio_model.bitrate = math.floor(self.cbb_bitrate_a.currentText())
         else:
             audio_model.mode = "none"
 
