@@ -52,11 +52,14 @@ class ExcuteThread(QThread):
         self.input_args = input_args
         self.output_args = output_args
         self.current = Current()
-        self.stopping=False
-        self.pausing=False
+        self.stopping = False
+        self.pausing = False
         super(ExcuteThread, self).__init__()
 
     def generate_args_command(self, cmd_list, arg_dict):
+        if isinstance(arg_dict,str):
+            cmd_list.append(arg_dict)
+            return
         for key, value in arg_dict.items():
             if key != "":
                 cmd_list.append("-"+key)
@@ -77,6 +80,9 @@ class ExcuteThread(QThread):
 
         if self.output_args.video_filter.encoder is None or input.force_ext:
             output = get_unique_file_name(input.output)
+        elif self.output_args.output_format is not None:
+            output = get_unique_file_name(
+                input.output, self.output_args.output_format)
         else:
             ext = encoder_infos[self.output_args.video_filter.encoder]["ext"]
             output = get_unique_file_name(input.output, ext)
@@ -139,6 +145,7 @@ class ExcuteThread(QThread):
 
     def excute_cmd(self):
         self.current.start_time = datetime.now()
+        self.print_signal.emit("执行命令："+self.current.cmd)
         self.ff_process = subprocess.Popen(self.current.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                            stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True,
                                            creationflags=subprocess.CREATE_NO_WINDOW)
@@ -177,8 +184,8 @@ class ExcuteThread(QThread):
                 if len(outputs) == 0:
                     return 0
                 output = outputs[0].strip()
-                if output=="N/A":
-                    length=0
+                if output == "N/A":
+                    length = 0
                 else:
                     length = float(output)
                 return length
@@ -199,6 +206,7 @@ class ExcuteThread(QThread):
     def run(self):
         try:
             if self.cmd:
+                self.current.cmd = self.cmd
                 self.excute_cmd()
             else:
                 for input in self.input_args:
@@ -223,9 +231,9 @@ class ExcuteThread(QThread):
             self.ff_process.stdin.flush()
 
     def pause(self):
-        self.pausing=True
+        self.pausing = True
         psutil.Process(pid=self.ff_process.pid).suspend()
 
     def resume(self):
-        self.pausing=False
+        self.pausing = False
         psutil.Process(pid=self.ff_process.pid).resume()

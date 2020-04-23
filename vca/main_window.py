@@ -71,6 +71,7 @@ class Application(Ui_MainWindow):
             if video.crf is None:
                 self.chk_crf.setChecked(False)
             else:
+                self.lbl_crf.setText(str(video.crf))
                 self.chk_crf.setChecked(True)
                 self.sld_crf.setValue(video.crf)
 
@@ -257,8 +258,10 @@ class Application(Ui_MainWindow):
                     input1, input2)
                 self.thread = ExcuteThread(cmd=cmd)
             elif self.rbtn_sub.isCheckable():
-                self.thread = ExcuteThread(self.files.files, {
-                                           "encoder": "Srt", "filter_args": {}})
+                output=OutputModel()
+                output.manual=True
+                output.output_format=".srt"
+                self.thread = ExcuteThread(self.files.files, output)
             self.thread.print_signal.connect(lambda p:  self.txt_log.append(p))
             self.thread.progress_signal.connect(self.update_progress)
             self.thread.comparison_signal.connect(self.show_comparision_result)
