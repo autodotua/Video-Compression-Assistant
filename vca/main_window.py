@@ -268,6 +268,7 @@ class Application(Ui_MainWindow):
             self.thread.finished.connect(self.finished)
             self.thread.status_signal.connect(self.status_changed)
             self.thread.start()
+            self.txt_log.setText("")
 
     def encoder_changed(self, value):
         self.sld_crf.setMaximum(encoder_infos[value]["crf"]["max"])
