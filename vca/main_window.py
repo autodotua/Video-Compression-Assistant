@@ -51,6 +51,7 @@ class Application(Ui_MainWindow):
 
     def setup_init_values(self):
         self.update_progress(None)
+        self.txt_last_output.setText("")
         self.files = FileListModel(
             self.config.files) if self.config.autosave else FileListModel()
         self.lst.setModel(self.files)
@@ -111,7 +112,7 @@ class Application(Ui_MainWindow):
         elif audio.mode == "encode":
             self.cbb_audio_mode.setCurrentText("重编码")
         elif audio.mode == "none":
-            self.cbb_audio_mode.setCurrentText("不处理")
+            self.cbb_audio_mode.setCurrentText("不导出")
         self.cbb_bitrate_a.setCurrentText(str(audio.bitrate))
 
     def get_output_args(self):
@@ -135,11 +136,11 @@ class Application(Ui_MainWindow):
 
         audio_model = OutputModel.AudioFilterModel()
         mode_text = self.cbb_audio_mode.currentText()
+        audio_model.bitrate = math.floor(float(self.cbb_bitrate_a.currentText()))
         if mode_text == "复制":
             audio_model.mode = "copy"
         elif mode_text == "重编码":
             audio_model.mode = "encode"
-            audio_model.bitrate = math.floor(float(self.cbb_bitrate_a.currentText()))
         else:
             audio_model.mode = "none"
 
@@ -254,7 +255,7 @@ class Application(Ui_MainWindow):
                     return
                 input1 = self.files.files[0].input
                 input2 = self.files.files[1].input
-                cmd = 'ffmpeg -i {} -i {} -lavfi "ssim;[0:v][1:v]psnr" -f null -' .format(
+                cmd = 'ffmpeg -i "{}" -i "{}" -lavfi "ssim;[0:v][1:v]psnr" -f null -' .format(
                     input1, input2)
                 self.thread = ExcuteThread(cmd=cmd)
             elif self.rbtn_sub.isCheckable():
@@ -262,13 +263,12 @@ class Application(Ui_MainWindow):
                 output.manual=True
                 output.output_format=".srt"
                 self.thread = ExcuteThread(self.files.files, output)
-            self.thread.print_signal.connect(lambda p:  self.txt_log.append(p))
+            self.thread.print_signal.connect(lambda p:  self.txt_last_output.setText(p))
             self.thread.progress_signal.connect(self.update_progress)
             self.thread.comparison_signal.connect(self.show_comparision_result)
             self.thread.finished.connect(self.finished)
             self.thread.status_signal.connect(self.status_changed)
             self.thread.start()
-            self.txt_log.setText("")
 
     def encoder_changed(self, value):
         self.sld_crf.setMaximum(encoder_infos[value]["crf"]["max"])

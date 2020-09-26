@@ -145,7 +145,6 @@ class ExcuteThread(QThread):
 
     def excute_cmd(self):
         self.current.start_time = datetime.now()
-        self.print_signal.emit("执行命令："+self.current.cmd)
         self.ff_process = subprocess.Popen(self.current.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                            stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True,
                                            creationflags=subprocess.CREATE_NO_WINDOW)
