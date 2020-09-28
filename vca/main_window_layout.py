@@ -1,7 +1,7 @@
 import vca.dragable_QListView 
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\autod\Desktop\20200229-视频压制助手\vca\main_window.ui'
+# Form implementation generated from reading ui file 'c:\Users\autod\OneDrive\同步\开发\20200229-视频压制助手\vca\main_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -30,19 +30,22 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
-        self.lst = vca.dragable_QListView.DragableQListView(self.groupBox_6)
-        self.lst.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.lst.setObjectName("lst")
-        self.gridLayout.addWidget(self.lst, 0, 0, 1, 3)
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridLayout.addItem(spacerItem, 1, 0, 1, 1)
         self.btn_input = QtWidgets.QPushButton(self.groupBox_6)
         self.btn_input.setObjectName("btn_input")
         self.gridLayout.addWidget(self.btn_input, 1, 1, 1, 1)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout.addItem(spacerItem, 1, 0, 1, 1)
         self.btn_delete = QtWidgets.QPushButton(self.groupBox_6)
         self.btn_delete.setAutoFillBackground(False)
         self.btn_delete.setObjectName("btn_delete")
         self.gridLayout.addWidget(self.btn_delete, 1, 2, 1, 1)
+        self.lst = vca.dragable_QListView.DragableQListView(self.groupBox_6)
+        self.lst.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.lst.setObjectName("lst")
+        self.gridLayout.addWidget(self.lst, 0, 0, 1, 4)
+        self.btn_clear_inputs = QtWidgets.QPushButton(self.groupBox_6)
+        self.btn_clear_inputs.setObjectName("btn_clear_inputs")
+        self.gridLayout.addWidget(self.btn_clear_inputs, 1, 3, 1, 1)
         self.horizontalLayout_4.addLayout(self.gridLayout)
         self.gpb_file = QtWidgets.QGroupBox(self.groupBox_6)
         self.gpb_file.setEnabled(False)
@@ -149,7 +152,7 @@ class Ui_MainWindow(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 948, 350))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 939, 342))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.gridLayout_7 = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_7.setObjectName("gridLayout_7")
@@ -334,6 +337,9 @@ class Ui_MainWindow(object):
         self.rbtn_sub = QtWidgets.QRadioButton(self.gridGroupBox)
         self.rbtn_sub.setObjectName("rbtn_sub")
         self.verticalLayout_4.addWidget(self.rbtn_sub)
+        self.rbtn_merge = QtWidgets.QRadioButton(self.gridGroupBox)
+        self.rbtn_merge.setObjectName("rbtn_merge")
+        self.verticalLayout_4.addWidget(self.rbtn_merge)
         spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_4.addItem(spacerItem2)
         self.btn_pause = QtWidgets.QPushButton(self.gridGroupBox)
@@ -477,6 +483,7 @@ class Ui_MainWindow(object):
         self.groupBox_6.setTitle(_translate("MainWindow", "输入/输出"))
         self.btn_input.setText(_translate("MainWindow", "添加.."))
         self.btn_delete.setText(_translate("MainWindow", "删除"))
+        self.btn_clear_inputs.setText(_translate("MainWindow", "清空"))
         self.gpb_file.setTitle(_translate("MainWindow", "参数"))
         self.label_18.setText(_translate("MainWindow", "输入："))
         self.label_19.setText(_translate("MainWindow", "输出："))
@@ -555,6 +562,7 @@ class Ui_MainWindow(object):
         self.rbtn_convert.setText(_translate("MainWindow", "视频转换"))
         self.rbtn_compare.setText(_translate("MainWindow", "视频比较"))
         self.rbtn_sub.setText(_translate("MainWindow", "提取字幕"))
+        self.rbtn_merge.setText(_translate("MainWindow", "合并音视频"))
         self.btn_pause.setText(_translate("MainWindow", "暂停"))
         self.btn_start.setText(_translate("MainWindow", "开始"))
         self.groupBox_3.setTitle(_translate("MainWindow", "运行信息"))

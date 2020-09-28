@@ -92,6 +92,12 @@ class FileListModel(QAbstractListModel):
         del self.files[row]
         self.endRemoveRows()
 
+    @pyqtSlot()
+    def removeAllFiles(self):
+        self.beginRemoveRows(QModelIndex(), 0, self.rowCount()-1)
+        self.files.clear()
+        self.endRemoveRows()
+
     # def removeFiles(self, files):
     #     self.beginResetModel()
     #     for file in files:

@@ -29,10 +29,10 @@
       <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="2,3">
        <item>
         <layout class="QGridLayout" name="gridLayout">
-         <item row="0" column="0" colspan="3">
-          <widget class="QListView" name="lst">
-           <property name="selectionMode">
-            <enum>QAbstractItemView::ExtendedSelection</enum>
+         <item row="1" column="1">
+          <widget class="QPushButton" name="btn_input">
+           <property name="text">
+            <string>添加..</string>
            </property>
           </widget>
          </item>
@@ -49,13 +49,6 @@
            </property>
           </spacer>
          </item>
-         <item row="1" column="1">
-          <widget class="QPushButton" name="btn_input">
-           <property name="text">
-            <string>添加..</string>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="2">
           <widget class="QPushButton" name="btn_delete">
            <property name="autoFillBackground">
@@ -63,6 +56,20 @@
            </property>
            <property name="text">
             <string>删除</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="4">
+          <widget class="QListView" name="lst">
+           <property name="selectionMode">
+            <enum>QAbstractItemView::ExtendedSelection</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QPushButton" name="btn_clear_inputs">
+           <property name="text">
+            <string>清空</string>
            </property>
           </widget>
          </item>
@@ -327,8 +334,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>948</width>
-              <height>350</height>
+              <width>939</width>
+              <height>342</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout_7" columnstretch="2,1">
@@ -787,6 +794,13 @@
           <widget class="QRadioButton" name="rbtn_sub">
            <property name="text">
             <string>提取字幕</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="rbtn_merge">
+           <property name="text">
+            <string>合并音视频</string>
            </property>
           </widget>
          </item>

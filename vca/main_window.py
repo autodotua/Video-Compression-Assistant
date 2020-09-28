@@ -197,7 +197,10 @@ class Application(Ui_MainWindow):
                 self.prgb_current.setMaximum(0)
 
             else:
-                self.lbl_current_file.setText(current.input.input)
+                try:
+                    self.lbl_current_file.setText(current.input.input)
+                except:
+                    pass
                 self.lbl_current_frame_time.setText(
                     "第"+current.frame + "帧  "+current.time)
                 self.lbl_current_speed.setText(
@@ -258,6 +261,21 @@ class Application(Ui_MainWindow):
                 cmd = 'ffmpeg -i "{}" -i "{}" -lavfi "ssim;[0:v][1:v]psnr" -f null -' .format(
                     input1, input2)
                 self.thread = ExcuteThread(cmd=cmd)
+            elif self.rbtn_merge.isChecked():
+                if self.files.rowCount() != 2:
+                    QMessageBox.critical(
+                        None, "错误", "输入文件必须为2个", QMessageBox.Ok)
+                    return
+                input1 = self.files.files[0].input
+                input2 = self.files.files[1].input
+                if input1.endswith("weba") or input1.endswith("aac") or input1.endswith("m4a"):
+                    temp = input1
+                    input1 = input2
+                    input2 = temp
+                output=get_unique_file_name('.'.join(self.files.files[0].output.split('.')[0:-1])+'.'+input1.split('.')[-1])
+                cmd = 'ffmpeg -i "{}" -i "{}" -strict -2 -c:v copy -c:a copy "{}"' .format(
+                    input1, input2,output)
+                self.thread = ExcuteThread(cmd=cmd)
             elif self.rbtn_sub.isCheckable():
                 output=OutputModel()
                 output.manual=True
@@ -273,6 +291,9 @@ class Application(Ui_MainWindow):
     def encoder_changed(self, value):
         self.sld_crf.setMaximum(encoder_infos[value]["crf"]["max"])
         self.sld_crf.setValue(encoder_infos[value]["crf"]["default"])
+
+    def btn_clear_inputs_click(self):
+        self.files.removeAllFiles()
 
     def btn_input_clicked(self):
         paths = QFileDialog.getOpenFileNames(
@@ -363,6 +384,7 @@ class Application(Ui_MainWindow):
         self.sld_preset.valueChanged.connect(
             lambda value: self.lbl_preset.setText(str(presets[value]["desc"])))
         self.btn_input.clicked.connect(self.btn_input_clicked)
+        self.btn_clear_inputs.clicked.connect(self.btn_clear_inputs_click)
         self.btn_delete.clicked.connect(self.delete_selection)
         self.lst.selectionModel().selectionChanged.connect(self.selected_file_changed)
 
