@@ -207,9 +207,10 @@ class Application(Ui_MainWindow):
                     current.fps + "FPS  "+current.speed+"×")
                 self.lbl_current_bitrate.setText(
                     current.bitrate+"  q="+current.q)
-                self.prgb_current.setMaximum(100)
+                self.prgb_current.setMaximum(10000)
                 if current.percent:
-                    self.prgb_current.setValue(int(current.percent*100))
+                    self.prgb_current.setFormat(str(int(current.percent*10000)/100)+"%")
+                    self.prgb_current.setValue(int(current.percent*10000))
                     self.lbl_current_time.setText(
                         "已用"+self.format_delta(current.elapsed) + "  剩余"+self.format_delta(current.left))
 

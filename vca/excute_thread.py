@@ -57,7 +57,7 @@ class ExcuteThread(QThread):
         super(ExcuteThread, self).__init__()
 
     def generate_args_command(self, cmd_list, arg_dict):
-        if isinstance(arg_dict,str):
+        if isinstance(arg_dict, str):
             cmd_list.append(arg_dict)
             return
         for key, value in arg_dict.items():
@@ -149,6 +149,8 @@ class ExcuteThread(QThread):
                                            stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True,
                                            creationflags=subprocess.CREATE_NO_WINDOW)
         l = 0
+        if self.stopping:
+                    return
         while not self.ff_process.poll():
             try:
 
@@ -225,7 +227,7 @@ class ExcuteThread(QThread):
         self.stopping = True
         if self.pausing:
             self.resume()
-        if self.ff_process:
+        if hasattr(self, 'ff_process'):
             self.ff_process.stdin.write("q")
             self.ff_process.stdin.flush()
 
