@@ -7,6 +7,7 @@ from vca.model.file_list_model import FileListModel
 from vca.model.file_model import FileModel
 from vca.model.output_model import OutputModel
 from vca.model.config import *
+from vca.model.status import Status
 import sys
 import os
 import platform
@@ -44,7 +45,7 @@ class Application(Ui_MainWindow):
             app.setFont(QFont("Microsoft Yahei UI", 9))
         self.MainWindow.show()
         icon = QIcon()
-        icon.addPixmap(QPixmap("icon.ico" if app_dir is None else os.path.join(app_dir,"icon.ico")),
+        icon.addPixmap(QPixmap("icon.ico" if app_dir is None else os.path.join(app_dir, "icon.ico")),
                        QIcon.Normal, QIcon.Off)
         self.MainWindow.setWindowIcon(icon)
         sys.exit(app.exec_())
@@ -136,7 +137,8 @@ class Application(Ui_MainWindow):
 
         audio_model = OutputModel.AudioFilterModel()
         mode_text = self.cbb_audio_mode.currentText()
-        audio_model.bitrate = math.floor(float(self.cbb_bitrate_a.currentText()))
+        audio_model.bitrate = math.floor(
+            float(self.cbb_bitrate_a.currentText()))
         if mode_text == "复制":
             audio_model.mode = "copy"
         elif mode_text == "重编码":
@@ -154,6 +156,7 @@ class Application(Ui_MainWindow):
         self.converting = True
         self.pausing = False
         self.btn_start.setText("停止")
+        self.btn_pause.setFocus()
         self.btn_pause.setText("暂停")
         # self.table_input.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
@@ -171,6 +174,14 @@ class Application(Ui_MainWindow):
         # self.table_input.setItem(i["index"], 2, QTableWidgetItem(i["status"]))
         # self.table_input.resizeColumnsToContents()
         pass
+
+    def format_datetime(self, time):
+        month = time.month
+        day = time.day
+        hour = time.hour
+        minute = time.minute
+        second = time.second
+        return "{}月{}日{:02}:{:02}:{:02}".format(month, day, hour, minute, second)
 
     def format_delta(self, time):
         seconds = int(time.total_seconds())
@@ -209,10 +220,11 @@ class Application(Ui_MainWindow):
                     current.bitrate+"  q="+current.q)
                 self.prgb_current.setMaximum(10000)
                 if current.percent:
-                    self.prgb_current.setFormat(str(int(current.percent*10000)/100)+"%")
+                    self.prgb_current.setFormat(
+                        str(int(current.percent*10000)/100)+"%")
                     self.prgb_current.setValue(int(current.percent*10000))
                     self.lbl_current_time.setText(
-                        "已用"+self.format_delta(current.elapsed) + "  剩余"+self.format_delta(current.left))
+                        "已用："+self.format_delta(current.elapsed) + "    剩余："+self.format_delta(current.left)+"    预计完成："+self.format_datetime(current.complete_time))
 
     def show_comparision_result(self, args):
         QMessageBox.information(
@@ -230,11 +242,11 @@ class Application(Ui_MainWindow):
     def pause(self):
         if not self.pausing:
             self.thread.pause()
-            self.pausing=True
+            self.pausing = True
             self.btn_pause.setText("继续")
         else:
             self.thread.resume()
-            self.pausing=False
+            self.pausing = False
             self.btn_pause.setText("暂停")
 
     def start(self):
@@ -273,16 +285,18 @@ class Application(Ui_MainWindow):
                     temp = input1
                     input1 = input2
                     input2 = temp
-                output=get_unique_file_name('.'.join(self.files.files[0].output.split('.')[0:-1])+'.'+input1.split('.')[-1])
+                output = get_unique_file_name('.'.join(self.files.files[0].output.split('.')[
+                                              0:-1])+'.'+input1.split('.')[-1])
                 cmd = 'ffmpeg -i "{}" -i "{}" -strict -2 -c:v copy -c:a copy "{}"' .format(
-                    input1, input2,output)
+                    input1, input2, output)
                 self.thread = ExcuteThread(cmd=cmd)
             elif self.rbtn_sub.isCheckable():
-                output=OutputModel()
-                output.manual=True
-                output.output_format=".srt"
+                output = OutputModel()
+                output.manual = True
+                output.output_format = ".srt"
                 self.thread = ExcuteThread(self.files.files, output)
-            self.thread.print_signal.connect(lambda p:  self.txt_last_output.setText(p))
+            self.thread.print_signal.connect(
+                lambda p:  self.txt_last_output.setText(p))
             self.thread.progress_signal.connect(self.update_progress)
             self.thread.comparison_signal.connect(self.show_comparision_result)
             self.thread.finished.connect(self.finished)

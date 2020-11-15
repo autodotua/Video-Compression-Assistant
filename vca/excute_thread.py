@@ -11,31 +11,12 @@ from subprocess import Popen, DEVNULL, STDOUT
 from datetime import datetime, timedelta
 import traceback
 import psutil
-
-
-class Current:
-    def __init__(self):
-        self.cmd = ""
-        self.length = 0
-        self.input = ""
-        self.start_time = None
-        self.frame = None
-        self.fps = None
-        self.q = None
-        self.size = None
-        self.time = None
-        self.bitrate = None
-        self.speed = None
-        self.elapsed = None
-        self.unkown = True
-        self.percent = None
-        self.left = None
-
+from vca.model.status import Status
 
 class ExcuteThread(QThread):
     print_signal = pyqtSignal(str)
     status_signal = pyqtSignal(dict)
-    progress_signal = pyqtSignal(Current)
+    progress_signal = pyqtSignal(Status)
     stream_signal = pyqtSignal(subprocess.Popen)
     comparison_signal = pyqtSignal(dict)
     r_ffmpeg_time = re.compile(
@@ -51,7 +32,7 @@ class ExcuteThread(QThread):
         self.cmd = cmd
         self.input_args = input_args
         self.output_args = output_args
-        self.current = Current()
+        self.current = Status()
         self.stopping = False
         self.pausing = False
         super(ExcuteThread, self).__init__()
@@ -124,6 +105,7 @@ class ExcuteThread(QThread):
                 self.current.percent = percent
                 self.current.left = (now-self.current.start_time) * \
                     ((1-percent)/percent)
+                self.current.complete_time = now+self.current.left
             else:
                 self.current.percent = None
         else:
@@ -233,8 +215,10 @@ class ExcuteThread(QThread):
 
     def pause(self):
         self.pausing = True
+        self.pause_start_time=datetime.now()
         psutil.Process(pid=self.ff_process.pid).suspend()
 
     def resume(self):
         self.pausing = False
+        self.current.start_time=self.current.start_time+(datetime.now()-self.pause_start_time)
         psutil.Process(pid=self.ff_process.pid).resume()
