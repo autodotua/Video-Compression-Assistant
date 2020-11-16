@@ -21,6 +21,7 @@ import PyQt5
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtWinExtras import QWinTaskbarProgress, QWinTaskbarButton
 import pickle
 import subprocess
 import psutil
@@ -39,16 +40,25 @@ class Application(Ui_MainWindow):
         app = QApplication(sys.argv)
         self.MainWindow = QMainWindow()
         self.setupUi(self.MainWindow)
+
+        self.init_task_bar()
         self.setup_init_values()
         self.setup_events()
         if platform.system() == "Windows":
             app.setFont(QFont("Microsoft Yahei UI", 9))
         self.MainWindow.show()
+        self.taskbar_progress.show()
+        self.taskbar_button.setWindow(self.MainWindow.windowHandle())
         icon = QIcon()
         icon.addPixmap(QPixmap("icon.ico" if app_dir is None else os.path.join(app_dir, "icon.ico")),
                        QIcon.Normal, QIcon.Off)
         self.MainWindow.setWindowIcon(icon)
         sys.exit(app.exec_())
+
+    def init_task_bar(self):
+        self.taskbar_button = QWinTaskbarButton()
+        self.taskbar_progress = self.taskbar_button.progress()
+        self.taskbar_progress.setRange(0, 100)
 
     def setup_init_values(self):
         self.update_progress(None)
@@ -166,13 +176,8 @@ class Application(Ui_MainWindow):
         self.btn_start.setEnabled(True)
         self.btn_start.setText("开始")
         self.update_progress(None)
-        # self.table_input.resizeColumnsToContents()
-        # self.table_input.setEditTriggers(
-        #     QAbstractItemView.DoubleClicked | QAbstractItemView.EditKeyPressed)
 
     def status_changed(self, i):
-        # self.table_input.setItem(i["index"], 2, QTableWidgetItem(i["status"]))
-        # self.table_input.resizeColumnsToContents()
         pass
 
     def format_datetime(self, time):
@@ -181,7 +186,7 @@ class Application(Ui_MainWindow):
         hour = time.hour
         minute = time.minute
         second = time.second
-        return "{}月{}日{:02}:{:02}:{:02}".format(month, day, hour, minute, second)
+        return "{}月{}日 {:02}:{:02}:{:02}".format(month, day, hour, minute, second)
 
     def format_delta(self, time):
         seconds = int(time.total_seconds())
@@ -201,6 +206,7 @@ class Application(Ui_MainWindow):
             self.prgb_current.setMaximum(100)
             self.prgb_current.reset()
             self.btn_pause.hide()
+            self.taskbar_progress.hide()
         else:
             self.txt_current_cmd.setText(current.cmd)
 
@@ -212,6 +218,7 @@ class Application(Ui_MainWindow):
                     self.lbl_current_file.setText(current.input.input)
                 except:
                     pass
+
                 self.lbl_current_frame_time.setText(
                     "第"+current.frame + "帧  "+current.time)
                 self.lbl_current_speed.setText(
@@ -225,6 +232,7 @@ class Application(Ui_MainWindow):
                     self.prgb_current.setValue(int(current.percent*10000))
                     self.lbl_current_time.setText(
                         "已用："+self.format_delta(current.elapsed) + "    剩余："+self.format_delta(current.left)+"    预计完成："+self.format_datetime(current.complete_time))
+                    self.taskbar_progress.setValue(int(current.percent*100))
 
     def show_comparision_result(self, args):
         QMessageBox.information(
@@ -244,16 +252,19 @@ class Application(Ui_MainWindow):
             self.thread.pause()
             self.pausing = True
             self.btn_pause.setText("继续")
+            self.taskbar_progress.pause()
         else:
             self.thread.resume()
             self.pausing = False
             self.btn_pause.setText("暂停")
+            self.taskbar_progress.resume()
 
     def start(self):
         if self.converting:
             self.btn_start.setEnabled(False)
             self.thread.stop()
             self.btn_pause.hide()
+            self.taskbar_progress.stop()
         else:
             self.save_config()
             if self.files.rowCount() == 0:
@@ -261,6 +272,10 @@ class Application(Ui_MainWindow):
                 return
             self.starting()
             self.btn_pause.show()
+            self.taskbar_progress.setPaused(False)
+            self.taskbar_progress.resume()
+            self.taskbar_progress.reset()
+            self.taskbar_progress.show()
             if self.rbtn_convert.isChecked():
                 self.thread = ExcuteThread(
                     self.files.files, self.get_output_args())
