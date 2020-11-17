@@ -39,7 +39,7 @@ class Config:
     def save(self, path=_config_file_path):
         try:
             json = jsonpickle.encode(self)
-            print("json is "+json)
+            #print("json is "+json)
             with open(path, "w", encoding="utf-8") as f:
                 f.write(json)
         except Exception as ex:

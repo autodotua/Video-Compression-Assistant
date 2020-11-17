@@ -805,6 +805,23 @@
           </widget>
          </item>
          <item>
+          <widget class="QRadioButton" name="rbtn_concat">
+           <property name="text">
+            <string>拼接视频</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="rbtn_custom">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;请在左侧“额外参数”输入需要的参数&lt;/p&gt;&lt;p&gt;其他区域的所有设置将全部不起作用&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="text">
+            <string>完全自定义</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <spacer name="verticalSpacer">
            <property name="orientation">
             <enum>Qt::Vertical</enum>

@@ -31,6 +31,7 @@ import math
 class Application(Ui_MainWindow):
     converting = False
     config = Config.restore()
+    last_outputs = ""
 
     def __init__(self):
         QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
@@ -202,7 +203,7 @@ class Application(Ui_MainWindow):
             self.lbl_current_speed.setText("")
             self.lbl_current_bitrate.setText("")
             self.lbl_current_time.setText("")
-            self.txt_current_cmd.setText("")
+            # self.txt_current_cmd.setText("")
             self.prgb_current.setMaximum(100)
             self.prgb_current.reset()
             self.btn_pause.hide()
@@ -237,7 +238,12 @@ class Application(Ui_MainWindow):
     def show_comparision_result(self, args):
         QMessageBox.information(
             None, "比较结果", "结构程度：\n"+args["ssim"].replace(" (", "（").replace(
-                " ", "\n").replace("（", " (")+"\n\n信噪比：\n"+args["psnr"].replace(" ", "\n"))
+                " ", "\n").replacevalue("（", " (")+"\n\n信噪比：\n"+args["psnr"].replace(" ", "\n"))
+
+    def update_last_outputs(self, value):
+        self.txt_last_output.setText(self.last_outputs+"\r\n"+value)
+        self.last_outputs = value
+        print("program output: "+value)
 
     def save_config(self, path=None):
         self.config.files = self.files.files
@@ -259,6 +265,13 @@ class Application(Ui_MainWindow):
             self.btn_pause.setText("暂停")
             self.taskbar_progress.resume()
 
+    def clear_temp_files(self):
+        g = os.walk(os.getcwd())
+        for path, dir_list, file_list in g:
+            for file in filter(lambda p:p.startswith('temp'),file_list):
+                os.remove(file)
+            return
+
     def start(self):
         if self.converting:
             self.btn_start.setEnabled(False)
@@ -279,6 +292,28 @@ class Application(Ui_MainWindow):
             if self.rbtn_convert.isChecked():
                 self.thread = ExcuteThread(
                     self.files.files, self.get_output_args())
+            elif self.rbtn_custom.isChecked():
+                self.thread = ExcuteThread(
+                    cmd="ffmpeg -y -hide_banner "+self.txt_filter_extra_args.toPlainText())
+            elif self.rbtn_concat.isChecked():
+                if self.files.rowCount() < 2:
+                    QMessageBox.critical(
+                        None, "错误", "输入文件必须大于2个", QMessageBox.Ok)
+                    return
+                cmds = []
+                ts_files = []
+                index = 1
+                for file in self.files.files:
+                    cmds.append('ffmpeg -y -hide_banner -i "{}" -c:v copy -c:a copy temp_{}.ts' .format(
+                        file.input, str(index)))
+                    ts_files.append("temp_{}.ts".format(str(index)))
+                    index += 1
+
+                outputcmd = 'ffmpeg  -y -hide_banner -i "concat:{}" -c copy {}'.format(
+                    '|'.join(ts_files), get_unique_file_name(self.files.files[0].output, ".mp4"))
+                cmds.append(outputcmd)
+                self.thread = ExcuteThread(cmd=cmds)
+
             elif self.rbtn_compare.isChecked():
                 if self.files.rowCount() != 2:
                     QMessageBox.critical(
@@ -310,12 +345,12 @@ class Application(Ui_MainWindow):
                 output.manual = True
                 output.output_format = ".srt"
                 self.thread = ExcuteThread(self.files.files, output)
-            self.thread.print_signal.connect(
-                lambda p:  self.txt_last_output.setText(p))
+            self.thread.print_signal.connect(self.update_last_outputs)
             self.thread.progress_signal.connect(self.update_progress)
             self.thread.comparison_signal.connect(self.show_comparision_result)
             self.thread.finished.connect(self.finished)
             self.thread.status_signal.connect(self.status_changed)
+            self.thread.finish_signal.connect(self.clear_temp_files)
             self.thread.start()
 
     def encoder_changed(self, value):

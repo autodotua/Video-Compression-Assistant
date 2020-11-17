@@ -13,7 +13,9 @@ import traceback
 import psutil
 from vca.model.status import Status
 
+
 class ExcuteThread(QThread):
+    finish_signal = pyqtSignal()
     print_signal = pyqtSignal(str)
     status_signal = pyqtSignal(dict)
     progress_signal = pyqtSignal(Status)
@@ -132,7 +134,7 @@ class ExcuteThread(QThread):
                                            creationflags=subprocess.CREATE_NO_WINDOW)
         l = 0
         if self.stopping:
-                    return
+            return
         while not self.ff_process.poll():
             try:
 
@@ -189,8 +191,13 @@ class ExcuteThread(QThread):
     def run(self):
         try:
             if self.cmd:
-                self.current.cmd = self.cmd
-                self.excute_cmd()
+                if isinstance(self.cmd, list):
+                    for c in self.cmd:
+                        self.current.cmd = c
+                        self.excute_cmd()
+                else:
+                    self.current.cmd = self.cmd
+                    self.excute_cmd()
             else:
                 for input in self.input_args:
                     if self.stopping:
@@ -202,8 +209,9 @@ class ExcuteThread(QThread):
 
                     self.excute_cmd()
         except Exception as ex:
-
             self.print_signal.emit(traceback.format_exc())
+
+        self.finish_signal.emit()
 
     def stop(self):
         self.stopping = True
@@ -215,10 +223,11 @@ class ExcuteThread(QThread):
 
     def pause(self):
         self.pausing = True
-        self.pause_start_time=datetime.now()
+        self.pause_start_time = datetime.now()
         psutil.Process(pid=self.ff_process.pid).suspend()
 
     def resume(self):
         self.pausing = False
-        self.current.start_time=self.current.start_time+(datetime.now()-self.pause_start_time)
+        self.current.start_time = self.current.start_time + \
+            (datetime.now()-self.pause_start_time)
         psutil.Process(pid=self.ff_process.pid).resume()
