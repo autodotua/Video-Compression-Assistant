@@ -421,7 +421,15 @@
                     </item>
                     <item>
                      <property name="text">
-                      <string>重编码</string>
+                      <string>重编码（自动）</string>
+                     </property>
+                    </item>
+                      <item>
+                     <property name="text">
+                      <string>重编码AAC</string>
+                     </property>
+                     <property name="text">
+                      <string>默认</string>
                      </property>
                     </item>
                    </widget>
@@ -808,6 +816,9 @@
           <widget class="QRadioButton" name="rbtn_concat">
            <property name="text">
             <string>拼接视频</string>
+           </property>
+            <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;需要自行选择或输入音频参数&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
           </widget>
          </item>

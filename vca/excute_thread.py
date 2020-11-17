@@ -39,29 +39,21 @@ class ExcuteThread(QThread):
         self.pausing = False
         super(ExcuteThread, self).__init__()
 
-    def generate_args_command(self, cmd_list, arg_dict):
-        if isinstance(arg_dict, str):
-            cmd_list.append(arg_dict)
-            return
-        for key, value in arg_dict.items():
-            if key != "":
-                cmd_list.append("-"+key)
-            if value:
-                cmd_list.append(str(value))
+  
 
     def generate_command(self, input):
         cmd_list = ["ffmpeg -y -hide_banner"]
         if self.input_args:
-            self.generate_args_command(cmd_list, input.get_input_args())
+            generate_args_command(cmd_list, input.get_input_args())
 
         cmd_list.append("-i")
         cmd_list.append('"'+input.input+'"')
 
         if self.output_args:
-            self.generate_args_command(
+            generate_args_command(
                 cmd_list, self.output_args.get_filter_args())
 
-        if self.output_args.video_filter.encoder is None or input.force_ext:
+        if self.output_args.video_filter is None or self.output_args.video_filter.encoder is None or input.force_ext:
             output = get_unique_file_name(input.output)
         elif self.output_args.output_format is not None:
             output = get_unique_file_name(
@@ -193,6 +185,8 @@ class ExcuteThread(QThread):
             if self.cmd:
                 if isinstance(self.cmd, list):
                     for c in self.cmd:
+                        if self.stopping:
+                            return
                         self.current.cmd = c
                         self.excute_cmd()
                 else:

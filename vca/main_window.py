@@ -122,7 +122,11 @@ class Application(Ui_MainWindow):
         if audio.mode == "copy":
             self.cbb_audio_mode.setCurrentText("复制")
         elif audio.mode == "encode":
-            self.cbb_audio_mode.setCurrentText("重编码")
+            self.cbb_audio_mode.setCurrentText("重编码（自动）")
+        elif audio.mode == "aac":
+            self.cbb_audio_mode.setCurrentText("重编码AAC")
+        elif audio.mode == "default":
+            self.cbb_audio_mode.setCurrentText("默认")
         elif audio.mode == "none":
             self.cbb_audio_mode.setCurrentText("不导出")
         self.cbb_bitrate_a.setCurrentText(str(audio.bitrate))
@@ -152,8 +156,12 @@ class Application(Ui_MainWindow):
             float(self.cbb_bitrate_a.currentText()))
         if mode_text == "复制":
             audio_model.mode = "copy"
-        elif mode_text == "重编码":
+        elif mode_text == "重编码AAC":
+            audio_model.mode = "aac"
+        elif mode_text == "重编码（自动）":
             audio_model.mode = "encode"
+        elif mode_text == "默认":
+            audio_model.mode = "default"
         else:
             audio_model.mode = "none"
 
@@ -268,7 +276,7 @@ class Application(Ui_MainWindow):
     def clear_temp_files(self):
         g = os.walk(os.getcwd())
         for path, dir_list, file_list in g:
-            for file in filter(lambda p:p.startswith('temp'),file_list):
+            for file in filter(lambda p: p.startswith('temp'), file_list):
                 os.remove(file)
             return
 
@@ -303,13 +311,24 @@ class Application(Ui_MainWindow):
                 cmds = []
                 ts_files = []
                 index = 1
+                output_args = self.get_output_args()
                 for file in self.files.files:
-                    cmds.append('ffmpeg -y -hide_banner -i "{}" -c:v copy -c:a copy temp_{}.ts' .format(
-                        file.input, str(index)))
+                    cmd_list = [
+                        'ffmpeg -y -hide_banner -i "{}"'.format(file.input)]
+                    if output_args.video_filter:
+                        generate_args_command(
+                            cmd_list, output_args.video_filter.get_filter_args())
+                    else:
+                        cmd_list.append("-c:v copy")
+                    generate_args_command(
+                        cmd_list, output_args.audio_filter.get_filter_args())
+                    cmd_list.append(self.txt_filter_extra_args.toPlainText())
+                    cmd_list.append('temp_{}.ts' .format(str(index)))
+                    cmds.append(' '.join(cmd_list))
                     ts_files.append("temp_{}.ts".format(str(index)))
                     index += 1
 
-                outputcmd = 'ffmpeg  -y -hide_banner -i "concat:{}" -c copy {}'.format(
+                outputcmd = 'ffmpeg  -y -hide_banner -i "concat:{}" -c copy  {}'.format(
                     '|'.join(ts_files), get_unique_file_name(self.files.files[0].output, ".mp4"))
                 cmds.append(outputcmd)
                 self.thread = ExcuteThread(cmd=cmds)

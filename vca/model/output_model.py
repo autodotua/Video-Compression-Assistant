@@ -42,16 +42,22 @@ class OutputModel:
 
     class AudioFilterModel:
         def __init__(self):
-            self.mode="copy"#copy/encode/none
-            self.encoder = "ACC"
+            self.mode="copy"#copy/encode/none/aac
             self.bitrate = 128
 
         def get_filter_args(self):
             args={}
-            if self.mode=="copy":
+            if self.mode=="default":
+                pass
+            elif self.mode=="copy":
                 args["c:a"] = "copy"
             elif self.mode=="encode":
                 args["b:a"] = str(self.bitrate)+"k"
+            elif self.mode=="aac":
+                args["c:a"] = "aac"
+                args["b:a"] = str(self.bitrate)+"k"
+            elif self.mode=='none':
+                args["an"] = ""
             return args
 
     def get_filter_args(self):

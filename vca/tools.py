@@ -26,3 +26,13 @@ def seconds_to_qtime(seconds):
     m = int(seconds/60) % 60
     s = seconds % 60
     return QTime(h, m, s)
+
+def generate_args_command(cmd_list, arg_dict):
+    if isinstance(arg_dict, str):
+        cmd_list.append(arg_dict)
+        return
+    for key, value in arg_dict.items():
+        if key != "":
+            cmd_list.append("-"+key)
+        if value:
+            cmd_list.append(str(value))
