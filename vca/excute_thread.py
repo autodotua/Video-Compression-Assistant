@@ -72,7 +72,7 @@ class ExcuteThread(QThread):
 
         cmd_list.append('"'+output+'"')
         cmd = ' '.join(cmd_list)
-        self.print_signal.emit("ffmpeg命令为："+cmd)
+        #self.print_signal.emit("ffmpeg命令为："+cmd)
         print("command is "+cmd)
         return cmd
 
@@ -203,7 +203,10 @@ class ExcuteThread(QThread):
                     if self.stopping:
                         return
                     self.current.input = input
-                    self.current.length = self.get_length(input)
+                    if input.cut:
+                        self.current.length=input.cut[1]-input.cut[0]
+                    else:
+                        self.current.length = self.get_length(input)
                     self.current.cmd = self.cmd if self.cmd is not None else self.generate_command(
                         input)
 
