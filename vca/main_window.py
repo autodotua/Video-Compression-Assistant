@@ -237,7 +237,7 @@ class Application(Ui_MainWindow):
                 self.prgb_current.setMaximum(10000)
                 if current.percent:
                     self.prgb_current.setFormat(
-                        str(int(current.percent*10000)/100)+"%")
+                        format(int(current.percent*10000)/100,'.2f')+"%")
                     self.prgb_current.setValue(int(current.percent*10000))
                     self.lbl_current_time.setText(
                         "已用："+self.format_delta(current.elapsed) + "    剩余："+self.format_delta(current.left)+"    预计完成："+self.format_datetime(current.complete_time))
