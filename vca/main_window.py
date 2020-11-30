@@ -28,6 +28,15 @@ import psutil
 import math
 
 
+class VcaMainWindow(QMainWindow):
+    isWorking = False
+
+    def closeEvent(self, event):
+        if self.isWorking:
+            QMessageBox.warning(self, "警告", "请先停止正在进行的任务")
+            event.ignore()
+
+
 class Application(Ui_MainWindow):
     converting = False
     config = Config.restore()
@@ -39,7 +48,7 @@ class Application(Ui_MainWindow):
 
     def show(self):
         app = QApplication(sys.argv)
-        self.MainWindow = QMainWindow()
+        self.MainWindow = VcaMainWindow()
         self.setupUi(self.MainWindow)
 
         self.init_task_bar()
@@ -177,6 +186,7 @@ class Application(Ui_MainWindow):
         self.btn_start.setText("停止")
         self.btn_pause.setFocus()
         self.btn_pause.setText("暂停")
+        self.MainWindow.isWorking = True
         # self.table_input.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
     def finished(self):
@@ -185,6 +195,7 @@ class Application(Ui_MainWindow):
         self.btn_start.setEnabled(True)
         self.btn_start.setText("开始")
         self.update_progress(None)
+        self.MainWindow.isWorking = False
 
     def status_changed(self, i):
         pass
@@ -237,7 +248,7 @@ class Application(Ui_MainWindow):
                 self.prgb_current.setMaximum(10000)
                 if current.percent:
                     self.prgb_current.setFormat(
-                        format(int(current.percent*10000)/100,'.2f')+"%")
+                        format(int(current.percent*10000)/100, '.2f')+"%")
                     self.prgb_current.setValue(int(current.percent*10000))
                     self.lbl_current_time.setText(
                         "已用："+self.format_delta(current.elapsed) + "    剩余："+self.format_delta(current.left)+"    预计完成："+self.format_datetime(current.complete_time))
@@ -282,14 +293,16 @@ class Application(Ui_MainWindow):
 
     def start(self):
         if self.converting:
-            self.btn_start.setEnabled(False)
-            self.thread.stop()
-            self.btn_pause.hide()
-            self.taskbar_progress.stop()
+            if QMessageBox.question(self.MainWindow, '警告', "是否结束任务?", QMessageBox.Yes | QMessageBox.No, QMessageBox.No) == QMessageBox.Yes:
+                self.btn_start.setEnabled(False)
+                self.thread.stop()
+                self.btn_pause.hide()
+                self.taskbar_progress.stop()
         else:
             self.save_config()
             if self.files.rowCount() == 0:
-                QMessageBox.critical(None, "错误", "还没有选择任何文件", QMessageBox.Ok)
+                QMessageBox.critical(self.MainWindow, "错误",
+                                     "还没有选择任何文件", QMessageBox.Ok)
                 return
             self.starting()
             self.btn_pause.show()
