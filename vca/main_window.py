@@ -114,12 +114,8 @@ class Application(Ui_MainWindow):
             else:
                 self.chk_bitrate_max.setChecked(True)
                 self.txt_bitrate_max.setValue(video.max_bitrate)
+                self.txt_bufsize.setValue(video.bufsize)
 
-            if video.min_bitrate is None:
-                self.chk_bitrate_min.setChecked(False)
-            else:
-                self.chk_bitrate_min.setChecked(True)
-                self.txt_bitrate_min.setValue(video.min_bitrate)
 
             if video.fps is None:
                 self.chk_fps.setChecked(False)
@@ -140,6 +136,8 @@ class Application(Ui_MainWindow):
             self.cbb_audio_mode.setCurrentText("不导出")
         self.cbb_bitrate_a.setCurrentText(str(audio.bitrate))
 
+        self.txt_filter_extra_args.setPlainText(model.extra_args)
+
     def get_output_args(self):
         model = OutputModel()
         if not self.grpb_video.isChecked():
@@ -155,8 +153,7 @@ class Application(Ui_MainWindow):
             ) if self.chk_bitrate.isChecked() else None
             video_model.max_bitrate = self.txt_bitrate_max.value(
             ) if self.chk_bitrate_max.isChecked() else None
-            video_model.min_bitrate = self.txt_bitrate_min.value(
-            ) if self.chk_bitrate_min.isChecked() else None
+            video_model.bufsize = self.txt_bufsize.value() 
             video_model.fps = self.cbb_fps.currentText() if self.chk_fps.isChecked() else None
 
         audio_model = OutputModel.AudioFilterModel()

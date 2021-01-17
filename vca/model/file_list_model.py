@@ -11,14 +11,14 @@ class FileListModel(QAbstractListModel):
     CutRole = Qt.UserRole + 3
     CutFromRole = Qt.UserRole + 4
     CutToRole = Qt.UserRole + 5
-    ImageSeqRole = Qt.UserRole +6
-    ForceExtRole = Qt.UserRole +7
-    InputFpsRole=Qt.UserRole+8
+    ImageSeqRole = Qt.UserRole + 6
+    ForceExtRole = Qt.UserRole + 7
+    InputFpsRole = Qt.UserRole+8
 
     def file_args_list_to_dict(list):
-        return {'input': list[0],'output': list[1],
-            "cut": list[2], "cut_from": list[3], "cut_to": list[4],
-            "image_seq":list[5],"force_ext":list[6],"input_fps":list[7]}
+        return {'input': list[0], 'output': list[1],
+                "cut": list[2], "cut_from": list[3], "cut_to": list[4],
+                "image_seq": list[5], "force_ext": list[6], "input_fps": list[7]}
 
     fileChanged = pyqtSignal()
 
@@ -26,15 +26,15 @@ class FileListModel(QAbstractListModel):
     def files(self):
         return self._files
 
-    def __init__(self,files=[]):
+    def __init__(self, files=[]):
         super().__init__(None)
-        self._files =files
+        self._files = files
 
     def data(self, index, role=Qt.DisplayRole):
-        if isinstance(index , QModelIndex):
+        if isinstance(index, QModelIndex):
             row = index.row()
         else:
-            row=index
+            row = index
 
         if role == Qt.DisplayRole:
             return os.path.basename(self._files[row].input)
@@ -97,9 +97,3 @@ class FileListModel(QAbstractListModel):
         self.beginRemoveRows(QModelIndex(), 0, self.rowCount()-1)
         self.files.clear()
         self.endRemoveRows()
-
-    # def removeFiles(self, files):
-    #     self.beginResetModel()
-    #     for file in files:
-    #         self.files.remove(file)
-    #     self.endResetModel

@@ -17,7 +17,7 @@ class OutputModel:
             self.fps = None
             self.bitrate = None
             self.max_bitrate = None
-            self.min_bitrate = None
+            self.bufsize = 2
 
         def get_filter_args(self):
             args = {}
@@ -33,9 +33,7 @@ class OutputModel:
                 args["b:v"] = str(self.bitrate)+"M"
             if self.max_bitrate  is not None:
                 args["maxrate"] = str(self.max_bitrate)+"M"
-                args["bufsize"] = str(self.max_bitrate*2)+"M"
-            if self.min_bitrate is not None:
-                args["minrate"] = str(self.min_bitrate)+"M"
+                args["bufsize"] = str(self.max_bitrate*self.bufsize)+"M"
             if self.fps is not None:
                 args["r"] = self.fps
             return args

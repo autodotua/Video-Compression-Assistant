@@ -424,10 +424,7 @@
                       <string>重编码（自动）</string>
                      </property>
                     </item>
-                      <item>
-                     <property name="text">
-                      <string>重编码AAC</string>
-                     </property>
+                    <item>
                      <property name="text">
                       <string>默认</string>
                      </property>
@@ -463,33 +460,65 @@
                <layout class="QGridLayout" name="gridLayout_5">
                 <item row="0" column="0">
                  <layout class="QGridLayout" name="gridLayout_2">
-                  <item row="5" column="3">
-                   <widget class="QLabel" name="label_5">
+                  <item row="6" column="0" colspan="2">
+                   <widget class="QCheckBox" name="chk_bitrate_max">
                     <property name="text">
-                     <string>Mbps</string>
+                     <string>最大码率：</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="2">
-                   <widget class="QComboBox" name="cbb_encoder">
-                    <property name="currentIndex">
+                  <item row="4" column="0" colspan="2">
+                   <widget class="QCheckBox" name="chk_fps">
+                    <property name="text">
+                     <string>帧率：</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="3">
+                   <widget class="QLabel" name="label_17">
+                    <property name="text">
+                     <string>倍</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="2">
+                   <widget class="QDoubleSpinBox" name="txt_bitrate">
+                    <property name="decimals">
                      <number>1</number>
                     </property>
-                    <item>
-                     <property name="text">
-                      <string>H.264</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>H.265</string>
-                     </property>
-                    </item>
-                    <item>
-                     <property name="text">
-                      <string>VP9</string>
-                     </property>
-                    </item>
+                    <property name="maximum">
+                     <double>500.000000000000000</double>
+                    </property>
+                    <property name="value">
+                     <double>10.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="2">
+                   <widget class="QDoubleSpinBox" name="txt_bufsize">
+                    <property name="toolTip">
+                     <string>当设置最大码率时，该数值代表检查码率的频率与最大码率设置值的比例。
+例如最大码率10Mbps，缓冲2X，那么将检查最近20Mb的视频码率是否高于10Mbps，若高于则进行码率控制。</string>
+                    </property>
+                    <property name="decimals">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <double>20.000000000000000</double>
+                    </property>
+                    <property name="minimum">
+                     <double>0.5</double>
+                    </property>
+                    <property name="value">
+                     <double>2.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0" colspan="2">
+                   <widget class="QLabel" name="label_23">
+                    <property name="text">
+                     <string>编码：</string>
+                    </property>
                    </widget>
                   </item>
                   <item row="4" column="2">
@@ -570,13 +599,6 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="4" column="3">
-                   <widget class="QLabel" name="label_7">
-                    <property name="text">
-                     <string>Fps</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="6" column="2">
                    <widget class="QDoubleSpinBox" name="txt_bitrate_max">
                     <property name="decimals">
@@ -590,6 +612,59 @@
                     </property>
                     <property name="value">
                      <double>20.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0" colspan="2">
+                   <widget class="QLabel" name="label">
+                    <property name="text">
+                     <string>预设：</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QComboBox" name="cbb_encoder">
+                    <property name="currentIndex">
+                     <number>1</number>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>H.264</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>H.265</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>VP9</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item row="3" column="2">
+                   <widget class="QLineEdit" name="txt_size"/>
+                  </item>
+                  <item row="2" column="3">
+                   <widget class="QLabel" name="lbl_crf">
+                    <property name="text">
+                     <string>28</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="3">
+                   <widget class="QLabel" name="label_8">
+                    <property name="text">
+                     <string>Mbps</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0" colspan="2">
+                   <widget class="QCheckBox" name="chk_bitrate">
+                    <property name="text">
+                     <string>平均码率：</string>
                     </property>
                    </widget>
                   </item>
@@ -612,6 +687,13 @@
                     </property>
                     <property name="tickInterval">
                      <number>5</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="3">
+                   <widget class="QLabel" name="label_5">
+                    <property name="text">
+                     <string>Mbps</string>
                     </property>
                    </widget>
                   </item>
@@ -641,85 +723,17 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="2">
-                   <widget class="QLineEdit" name="txt_size"/>
-                  </item>
-                  <item row="5" column="2">
-                   <widget class="QDoubleSpinBox" name="txt_bitrate">
-                    <property name="decimals">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <double>500.000000000000000</double>
-                    </property>
-                    <property name="value">
-                     <double>10.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="3">
-                   <widget class="QLabel" name="lbl_crf">
-                    <property name="text">
-                     <string>28</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="3">
-                   <widget class="QLabel" name="label_8">
-                    <property name="text">
-                     <string>Mbps</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="7" column="2">
-                   <widget class="QDoubleSpinBox" name="txt_bitrate_min">
-                    <property name="decimals">
-                     <number>1</number>
-                    </property>
-                    <property name="maximum">
-                     <double>500.000000000000000</double>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="7" column="3">
-                   <widget class="QLabel" name="label_17">
-                    <property name="text">
-                     <string>Mbps</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="3" column="0" colspan="2">
                    <widget class="QCheckBox" name="chk_size">
                     <property name="text">
-                     <string>分辨率</string>
+                     <string>分辨率：</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="0" colspan="2">
-                   <widget class="QCheckBox" name="chk_fps">
+                  <item row="4" column="3">
+                   <widget class="QLabel" name="label_7">
                     <property name="text">
-                     <string>帧率：</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="0" colspan="2">
-                   <widget class="QCheckBox" name="chk_bitrate">
-                    <property name="text">
-                     <string>平均码率：</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="0" colspan="2">
-                   <widget class="QCheckBox" name="chk_bitrate_max">
-                    <property name="text">
-                     <string>最大码率：</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="7" column="0" colspan="2">
-                   <widget class="QCheckBox" name="chk_bitrate_min">
-                    <property name="text">
-                     <string>最小码率：</string>
+                     <string>Fps</string>
                     </property>
                    </widget>
                   </item>
@@ -733,17 +747,10 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0" colspan="2">
-                   <widget class="QLabel" name="label">
+                  <item row="7" column="0" colspan="2">
+                   <widget class="QLabel" name="label_6">
                     <property name="text">
-                     <string>预设：</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0" colspan="2">
-                   <widget class="QLabel" name="label_23">
-                    <property name="text">
-                     <string>编码：</string>
+                     <string>最大码率缓冲：</string>
                     </property>
                    </widget>
                   </item>
@@ -814,11 +821,11 @@
          </item>
          <item>
           <widget class="QRadioButton" name="rbtn_concat">
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;需要自行选择或输入音频参数&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="text">
             <string>拼接视频</string>
-           </property>
-            <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;需要自行选择或输入音频参数&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
           </widget>
          </item>
