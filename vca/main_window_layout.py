@@ -1,7 +1,7 @@
 import vca.dragable_QListView 
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\autod\OneDrive\同步\开发\20200229-视频压制助手\vca\main_window.ui'
+# Form implementation generated from reading ui file 'c:\Users\admin\OneDrive\开发\20200229-视频压制助手\vca\main_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -468,15 +468,19 @@ class Ui_MainWindow(object):
         self.menu_import.setObjectName("menu_import")
         self.menu_export = QtWidgets.QAction(MainWindow)
         self.menu_export.setObjectName("menu_export")
+        self.menu_save_preset = QtWidgets.QAction(MainWindow)
+        self.menu_save_preset.setObjectName("menu_save_preset")
+        self.menu_delete_preset = QtWidgets.QAction(MainWindow)
+        self.menu_delete_preset.setObjectName("menu_delete_preset")
         self.menu_config_autosave = QtWidgets.QAction(MainWindow)
         self.menu_config_autosave.setCheckable(True)
         self.menu_config_autosave.setChecked(True)
         self.menu_config_autosave.setObjectName("menu_config_autosave")
         self.menu.addSeparator()
-        self.menu.addAction(self.menu_import)
-        self.menu.addAction(self.menu_export)
-        self.menu.addSeparator()
+        self.menu.addAction(self.menu_save_preset)
+        self.menu.addAction(self.menu_delete_preset)
         self.menu.addAction(self.menu_config_autosave)
+        self.menu.addSeparator()
         self.menubar.addAction(self.menu.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -565,7 +569,7 @@ class Ui_MainWindow(object):
         self.label_5.setText(_translate("MainWindow", "Mbps"))
         self.lbl_preset.setText(_translate("MainWindow", "平衡"))
         self.chk_size.setText(_translate("MainWindow", "分辨率："))
-        self.label_7.setText(_translate("MainWindow", "Fps"))
+        self.label_7.setText(_translate("MainWindow", "FPS"))
         self.chk_crf.setText(_translate("MainWindow", "CRF："))
         self.label_6.setText(_translate("MainWindow", "最大码率缓冲："))
         self.groupBox_2.setTitle(_translate("MainWindow", "额外参数"))
@@ -602,4 +606,6 @@ class Ui_MainWindow(object):
         self.menu.setTitle(_translate("MainWindow", "配置"))
         self.menu_import.setText(_translate("MainWindow", "导入"))
         self.menu_export.setText(_translate("MainWindow", "导出"))
+        self.menu_save_preset.setText(_translate("MainWindow", "保存为预设"))
+        self.menu_delete_preset.setText(_translate("MainWindow", "删除预设"))
         self.menu_config_autosave.setText(_translate("MainWindow", "自动保存"))

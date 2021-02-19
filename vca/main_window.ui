@@ -733,7 +733,7 @@
                   <item row="4" column="3">
                    <widget class="QLabel" name="label_7">
                     <property name="text">
-                     <string>Fps</string>
+                     <string>FPS</string>
                     </property>
                    </widget>
                   </item>
@@ -1153,10 +1153,10 @@ p, li { white-space: pre-wrap; }
      <string>配置</string>
     </property>
     <addaction name="separator"/>
-    <addaction name="menu_import"/>
-    <addaction name="menu_export"/>
-    <addaction name="separator"/>
+    <addaction name="menu_save_preset"/>
+    <addaction name="menu_delete_preset"/>
     <addaction name="menu_config_autosave"/>
+    <addaction name="separator"/>
    </widget>
    <addaction name="menu"/>
   </widget>
@@ -1168,6 +1168,16 @@ p, li { white-space: pre-wrap; }
   <action name="menu_export">
    <property name="text">
     <string>导出</string>
+   </property>
+  </action>
+  <action name="menu_save_preset">
+   <property name="text">
+    <string>保存为预设</string>
+   </property>
+  </action>
+  <action name="menu_delete_preset">
+   <property name="text">
+    <string>删除预设</string>
    </property>
   </action>
   <action name="menu_config_autosave">

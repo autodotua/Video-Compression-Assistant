@@ -21,6 +21,7 @@ class Config:
 
         self.files = []
         self.output_args = OutputModel()
+        self.presets=dict()
         self.autosave = True
 
     def restore(path=_config_file_path):

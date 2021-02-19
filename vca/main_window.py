@@ -79,6 +79,16 @@ class Application(Ui_MainWindow):
         self.apply_output_ui()
         self.lbl_preset.setText(presets[self.sld_preset.value()]["desc"])
         self.btn_pause.hide()
+        for name in self.config.presets.keys():
+            action = QAction(name, self.MainWindow)
+            action.triggered.connect(lambda p,x=name: self.apply_preset(x))
+            self.menu.addAction(action)
+
+    def apply_preset(self, name):
+        preset = self.config.presets[name]
+        self.config.output_args = preset
+        self.files.removeAllFiles()
+        self.apply_output_ui()
 
     def apply_output_ui(self):
         model = self.config.output_args
@@ -116,7 +126,6 @@ class Application(Ui_MainWindow):
                 self.txt_bitrate_max.setValue(video.max_bitrate)
                 self.txt_bufsize.setValue(video.bufsize)
 
-
             if video.fps is None:
                 self.chk_fps.setChecked(False)
             else:
@@ -153,7 +162,7 @@ class Application(Ui_MainWindow):
             ) if self.chk_bitrate.isChecked() else None
             video_model.max_bitrate = self.txt_bitrate_max.value(
             ) if self.chk_bitrate_max.isChecked() else None
-            video_model.bufsize = self.txt_bufsize.value() 
+            video_model.bufsize = self.txt_bufsize.value()
             video_model.fps = self.cbb_fps.currentText() if self.chk_fps.isChecked() else None
 
         audio_model = OutputModel.AudioFilterModel()
@@ -462,6 +471,28 @@ class Application(Ui_MainWindow):
             self.setup_init_values()
         pass
 
+    def save_as_preset(self):
+        name, ok = QInputDialog.getText(self.MainWindow, "保存预设", '输入预设名')
+        if ok:
+            exist=name in self.config.presets
+            self.config.presets[name] = self.get_output_args()
+            if not exist:
+                action = QAction(name, self.MainWindow)
+                action.triggered.connect(lambda p: self.apply_preset(name))
+                self.menu.addAction(action)
+            self.config.save()
+    def delete_preset(self):
+        if not any(self.config.presets):
+            QMessageBox.warning(self.MainWindow, "警告", "没有任何已保存的预设")
+            return
+
+        item, ok = QInputDialog.getItem(
+            self.MainWindow, "删除预设", '请选择预设',self.config.presets.keys(),0,False)
+        if ok:
+            del self.config.presets[item]
+            self.menu.removeAction(next(filter(lambda p:p.text()==item,self.menu.actions()),None))
+            self.config.save()
+
     def export_config(self):
         path = QFileDialog.getSaveFileName(
             self.MainWindow, "保存",  filter="JSON文件 (*.json)")[0]
@@ -491,3 +522,5 @@ class Application(Ui_MainWindow):
         self.lst.dropped.connect(self.list_file_dropped)
         self.menu_import.triggered.connect(self.import_config)
         self.menu_export.triggered.connect(self.export_config)
+        self.menu_save_preset.triggered.connect(self.save_as_preset)
+        self.menu_delete_preset.triggered.connect(self.delete_preset)
