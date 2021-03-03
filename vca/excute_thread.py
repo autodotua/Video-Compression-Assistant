@@ -51,7 +51,7 @@ class ExcuteThread(QThread):
         if input.subtitle_path is not None:
             cmd_list.append("-i")
             cmd_list.append('"'+input.subtitle_path+'"')
-            cmd_list.append('-c:s copy')
+            cmd_list.append('-c:s copy') 
 
         if self.output_args:
             generate_args_command(
