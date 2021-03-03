@@ -75,25 +75,25 @@ class FileListModel(QAbstractListModel):
     #     }
 
     @pyqtSlot(str, int)
-    def addFile(self, item):
+    def add_file(self, item):
         self.beginInsertRows(QModelIndex(), self.rowCount(), self.rowCount())
         self.files.append(item)
         self.endInsertRows()
 
     @pyqtSlot(int, str, int)
-    def editFile(self, row, item):
+    def edit_file(self, row, item):
         ix = self.index(row, 0)
         self.files[row] = item
         self.dataChanged.emit(ix, ix, self.roleNames())
 
     @pyqtSlot(int)
-    def removeFile(self, row):
+    def remove_file(self, row):
         self.beginRemoveRows(QModelIndex(), row, row)
         del self.files[row]
         self.endRemoveRows()
 
     @pyqtSlot()
-    def removeAllFiles(self):
+    def remove_all_files(self):
         self.beginRemoveRows(QModelIndex(), 0, self.rowCount()-1)
         self.files.clear()
         self.endRemoveRows()
