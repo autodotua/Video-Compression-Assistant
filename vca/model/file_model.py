@@ -1,5 +1,5 @@
 class FileModel:
-    def __init__(self, input="", output="", cut=None, image_seq=False, force_ext=False, input_fps=0,extra_args=""):
+    def __init__(self, input="", output="", cut=None, image_seq=False, force_ext=False, input_fps=0,extra_args="",subtitle_path=None):
         self.input = input
         self.output = output
         self.cut = cut
@@ -7,6 +7,7 @@ class FileModel:
         self.force_ext = force_ext
         self.input_fps = input_fps
         self.extra_args=extra_args
+        self.subtitle_path=subtitle_path
 
     @property
     def need_cut(self):

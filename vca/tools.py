@@ -18,14 +18,15 @@ def get_unique_file_name(path, ext=None):
 
 
 def qtime_to_seconds(time):
-    return time.hour()*3600+time.minute()*60+time.second()
+    return time.hour()*3600+time.minute()*60+time.second()+time.msec()*0.001
 
 
 def seconds_to_qtime(seconds):
     h = int(seconds/3600)
     m = int(seconds/60) % 60
     s = seconds % 60
-    return QTime(h, m, s)
+    ms=int((seconds%1)*1000)
+    return QTime(h, m, s,ms)
 
 def generate_args_command(cmd_list, arg_dict):
     if isinstance(arg_dict, str):

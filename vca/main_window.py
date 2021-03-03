@@ -87,7 +87,7 @@ class Application(Ui_MainWindow):
     def apply_preset(self, name):
         preset = self.config.presets[name]
         self.config.output_args = preset
-        self.files.removeAllFiles()
+        #self.files.remove_all_files()
         self.apply_output_ui()
 
     def apply_output_ui(self):
@@ -396,14 +396,19 @@ class Application(Ui_MainWindow):
         self.sld_crf.setValue(encoder_infos[value]["crf"]["default"])
 
     def btn_clear_inputs_click(self):
-        self.files.removeAllFiles()
+        self.files.remove_all_files()
 
     def btn_input_clicked(self):
         paths = QFileDialog.getOpenFileNames(
-            self.MainWindow, "打开",  filter="所有文件 (*.*)")
+            self.MainWindow, "添加视频",  filter="主流多媒体文件(*.mp4 *.avi *.mkv *.3gp *.webm *.acc *.mp3);;所有文件 (*.*)")
         if paths[0]:
             for path in paths[0]:
-                self.files.addFile(FileModel(path, path))
+                self.files.add_file(FileModel(path, path))
+    def btn_input_subtitle_browse_clicked(self):
+        path = QFileDialog.getOpenFileName(
+            self.MainWindow, "选择字幕",  filter="主流字幕文件(*.ass *.srt);;所有文件 (*.*)")
+        if path[0]:
+            self.txt_input_subtitle.setText(path[0])
 
     def delete_selection(self):
         indexex = self.lst.selectionModel().selection().indexes()
@@ -413,11 +418,16 @@ class Application(Ui_MainWindow):
 
         for file in files:
             index = self.files.files.index(file)
-            self.files.removeFile(index)
+            self.files.remove_file(index)
 
     def selected_file_changed(self, index):
         if index is None or len(index.indexes()) != 1:
             self.gpb_file.setEnabled(False)
+            self.chk_cut.setChecked(False)
+            self.chk_input_subtitle.setChecked(False)
+            self.chk_image_seq.setChecked(False)
+            self.chk_input_fps.setChecked(False)
+            self.chk_force_ext.setChecked(False)
         else:
             row = index.indexes()[0].row()
             file = self.files.files[row]
@@ -437,12 +447,24 @@ class Application(Ui_MainWindow):
             self.txt_input_extra_args.setText(file.extra_args)
             if input_fps > 0:
                 self.cbb_input_fps.setCurrentText(str(input_fps))
+            if file.subtitle_path is not None:
+                self.chk_input_subtitle.setChecked(True)
+                self.txt_input_subtitle.setText(file.subtitle_path)
 
     def cut_changed(self, checked):
         self.time_from.setEnabled(checked)
         self.time_to.setEnabled(checked)
 
+    def subtitle_changed(self, checked):
+        self.btn_input_subtitle_browse.setEnabled(checked)
+        self.txt_input_subtitle.setEnabled(checked)
+        if checked:
+            self.txt_output.setText(os.path.splitext(self.txt_output.text())[0]+'.mkv')
+            self.chk_force_ext.setChecked(True)
+
     def save_io_settings(self):
+        if len(self.lst.selectionModel().selection().indexes())==0:
+            return
         index = self.lst.selectionModel().selection().indexes()[0]
         file = FileModel(self.txt_input.text(),
                          self.txt_output.text(),
@@ -452,8 +474,9 @@ class Application(Ui_MainWindow):
                          self.chk_force_ext.isChecked(),
                          float(self.cbb_input_fps.currentText()
                                ) if self.chk_input_fps.isChecked() else 0,
-                         self.txt_input_extra_args.text())
-        self.files.editFile(index.row(), file)
+                         self.txt_input_extra_args.text(),
+                         self.txt_input_subtitle.text() if self.chk_input_subtitle.isChecked() else None)
+        self.files.edit_file(index.row(), file)
         pass
 
     def chk_input_fps_toggled(self, checked):
@@ -461,7 +484,7 @@ class Application(Ui_MainWindow):
 
     def list_file_dropped(self, files):
         for file in files:
-            self.files.addFile(FileModel(file, file))
+            self.files.add_file(FileModel(file, file))
 
     def import_config(self):
         path = QFileDialog.getOpenFileName(
@@ -481,6 +504,7 @@ class Application(Ui_MainWindow):
                 action.triggered.connect(lambda p: self.apply_preset(name))
                 self.menu.addAction(action)
             self.config.save()
+
     def delete_preset(self):
         if not any(self.config.presets):
             QMessageBox.warning(self.MainWindow, "警告", "没有任何已保存的预设")
@@ -514,10 +538,22 @@ class Application(Ui_MainWindow):
         self.lst.selectionModel().selectionChanged.connect(self.selected_file_changed)
 
         self.chk_cut.toggled.connect(self.cut_changed)
+        self.chk_input_subtitle.toggled.connect(self.subtitle_changed)
         self.chk_input_fps.toggled.connect(self.chk_input_fps_toggled)
-        self.btn_io_save.clicked.connect(self.save_io_settings)
-        self.btn_io_reset.clicked.connect(
-            lambda: self.selected_file_changed(self.lst.selectionModel().selection()))
+        self.btn_input_subtitle_browse.clicked.connect(self.btn_input_subtitle_browse_clicked)
+
+        self.chk_input_fps.stateChanged.connect(lambda:self.save_io_settings())
+        self.chk_input_subtitle.stateChanged.connect(lambda:self.save_io_settings())
+        self.chk_force_ext.stateChanged.connect(lambda:self.save_io_settings())
+        self.chk_input_fps.stateChanged.connect(lambda:self.save_io_settings())
+        self.chk_cut.stateChanged.connect(lambda:self.save_io_settings())
+        self.time_from.timeChanged.connect(lambda:self.save_io_settings())
+        self.time_to.timeChanged.connect(lambda:self.save_io_settings())
+        self.cbb_input_fps.editTextChanged.connect(lambda:self.save_io_settings())
+        self.txt_input_subtitle.textChanged.connect(lambda:self.save_io_settings())
+        self.txt_input_extra_args.textChanged.connect(lambda:self.save_io_settings())
+        self.txt_input.textChanged.connect(lambda:self.save_io_settings())
+        self.txt_output.textChanged.connect(lambda:self.save_io_settings())
 
         self.lst.dropped.connect(self.list_file_dropped)
         self.menu_import.triggered.connect(self.import_config)
