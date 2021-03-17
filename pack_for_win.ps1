@@ -10,7 +10,13 @@ Move-Item -Path "./dist/main.exe" -Destination "./dist/vca.exe" -Force
 # $Shortcut = $WshShell.CreateShortcut(".\dist\vca.lnk")
 # $Shortcut.TargetPath ="vca\vca.exe"
 # $Shortcut.Save()
+try{
 Remove-Item ./build -r -fo
 Remove-Item ./__pycache__ -r -fo
-[System.Console]::WriteLine('OK.')
+}
+catch{
+    Write-Host "Error deleting temporary files"
+    Write-Host $_
+}
+[System.Console]::WriteLine('Finished.')
 [void][System.Console]::ReadKey(1)

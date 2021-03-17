@@ -11,5 +11,5 @@
     ],
     "qtForPython.path.designer": "C:\\Users\\autod\\AppData\\Local\\Programs\\Python\\Python37\\Lib\\site-packages\\pyqt5_tools\\Qt\\bin\\designer.exe",
     "qtForPython.path.pyuic": "pyuic5 -d -o ./vca/\"${fileBasenameNoExtension}\"_layout.py",
-    "python.pythonPath": "c:\\users\\admin\\appdata\\local\\programs\\python\\python37\\python.exe"
+    "python.pythonPath": "C:\\Users\\autod\\AppData\\Local\\Programs\\Python\\Python38-32\\python.exe"
 }

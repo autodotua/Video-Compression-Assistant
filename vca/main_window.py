@@ -351,7 +351,6 @@ class Application(Ui_MainWindow):
                     '|'.join(ts_files), get_unique_file_name(self.files.files[0].output, ".mp4"))
                 cmds.append(outputcmd)
                 self.thread = ExcuteThread(cmd=cmds)
-
             elif self.rbtn_compare.isChecked():
                 if self.files.rowCount() != 2:
                     QMessageBox.critical(
@@ -400,7 +399,7 @@ class Application(Ui_MainWindow):
 
     def btn_input_clicked(self):
         paths = QFileDialog.getOpenFileNames(
-            self.MainWindow, "添加视频",  filter="主流多媒体文件(*.mp4 *.avi *.mkv *.3gp *.webm *.acc *.mp3);;所有文件 (*.*)")
+            self.MainWindow, "添加视频",  filter="主流多媒体文件(*.mp4 *.avi *.mkv *.3gp *.webm *.acc *.mp3 *.avs);;所有文件 (*.*)")
         if paths[0]:
             for path in paths[0]:
                 self.files.add_file(FileModel(path, path))

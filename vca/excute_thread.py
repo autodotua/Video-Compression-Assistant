@@ -68,8 +68,6 @@ class ExcuteThread(QThread):
 
         cmd_list.append('"'+output+'"')
         cmd = ' '.join(cmd_list)
-        #self.print_signal.emit("ffmpeg命令为："+cmd)
-        print("command is "+cmd)
         return cmd
 
     def get_ffmpeg_seconds(self, time):
@@ -123,8 +121,19 @@ class ExcuteThread(QThread):
         if match:
             self.ssim = match.group(1)
 
+    def write_log(self,msg):
+        if self.current.start_time is None:
+            return
+        log_dir = './logs'
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        file=log_dir+'/vca_'+self.current.start_time.strftime('%Y%m%d_%H%M%S')+".log"
+        with open(file,'a+') as f:
+            f.write(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:23]+"    "+(msg.strip() if isinstance(msg,str) else "未知日志输出")+'\n')
+
     def excute_cmd(self):
         self.current.start_time = datetime.now()
+        self.write_log("开始执行命令："+self.current.cmd)
         self.ff_process = subprocess.Popen(self.current.cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                            stderr=subprocess.STDOUT, encoding="utf8", universal_newlines=True,
                                            creationflags=subprocess.CREATE_NO_WINDOW)
@@ -133,10 +142,11 @@ class ExcuteThread(QThread):
             return
         while not self.ff_process.poll():
             try:
-
                 output = self.ff_process.stdout.readline()
+                self.write_log(output)
             except Exception as ex:
                 self.print_signal.emit("读取输出失败："+str(ex))
+                self.write_log("读取输出失败："+str(ex))
                 continue
             if len(output) == 0:
                 break
@@ -169,6 +179,7 @@ class ExcuteThread(QThread):
                     length = 0
                 else:
                     length = float(output)
+                
                 return length
         except Exception as ex:
             self.print_signal.emit("获取视频长度失败"+str(ex))
@@ -215,6 +226,7 @@ class ExcuteThread(QThread):
         self.finish_signal.emit()
 
     def stop(self):
+        self.write_log("停止")
         self.stopping = True
         if self.pausing:
             self.resume()
@@ -223,11 +235,13 @@ class ExcuteThread(QThread):
             self.ff_process.stdin.flush()
 
     def pause(self):
+        self.write_log("暂停")
         self.pausing = True
         self.pause_start_time = datetime.now()
         psutil.Process(pid=self.ff_process.pid).suspend()
 
     def resume(self):
+        self.write_log("恢复")
         self.pausing = False
         self.current.start_time = self.current.start_time + \
             (datetime.now()-self.pause_start_time)
